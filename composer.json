@@ -1,0 +1,14 @@
+{
+	"name": "phi-routing",
+	"description": "Phi routing",
+	"autoload": {
+		"psr-4": {
+			"Phi\\Routing\\": "source/class/Routing"
+		},
+		"files": [
+
+		]
+	}
+}
+
+
