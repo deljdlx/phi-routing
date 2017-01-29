@@ -1,0 +1,49 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "hash": "f304075bb0160c35fdcb52d9b50124f6",
+    "content-hash": "f216b1cb766294e7618af6609dc88541",
+    "packages": [
+        {
+            "name": "phi-http",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ElBiniou/phi-http.git",
+                "reference": "aca2988cc7a04e66bcd65527cdd4ebafec533969"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ElBiniou/phi-http/zipball/aca2988cc7a04e66bcd65527cdd4ebafec533969",
+                "reference": "aca2988cc7a04e66bcd65527cdd4ebafec533969",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Phi\\Routing\\": "source/class/HTTP"
+                },
+                "files": []
+            },
+            "description": "Phi http",
+            "support": {
+                "source": "https://github.com/ElBiniou/phi-http/tree/master",
+                "issues": "https://github.com/ElBiniou/phi-http/issues"
+            },
+            "time": "2017-01-29 14:56:50"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "phi-http": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}

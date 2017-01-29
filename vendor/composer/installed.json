@@ -1,0 +1,32 @@
+[
+    {
+        "name": "phi-http",
+        "version": "dev-master",
+        "version_normalized": "9999999-dev",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/ElBiniou/phi-http.git",
+            "reference": "aca2988cc7a04e66bcd65527cdd4ebafec533969"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/ElBiniou/phi-http/zipball/aca2988cc7a04e66bcd65527cdd4ebafec533969",
+            "reference": "aca2988cc7a04e66bcd65527cdd4ebafec533969",
+            "shasum": ""
+        },
+        "time": "2017-01-29 14:56:50",
+        "type": "library",
+        "installation-source": "source",
+        "autoload": {
+            "psr-4": {
+                "Phi\\Routing\\": "source/class/HTTP"
+            },
+            "files": []
+        },
+        "description": "Phi http",
+        "support": {
+            "source": "https://github.com/ElBiniou/phi-http/tree/master",
+            "issues": "https://github.com/ElBiniou/phi-http/issues"
+        }
+    }
+]
