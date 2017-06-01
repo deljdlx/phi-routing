@@ -12,7 +12,7 @@
 
 	"autoload": {
 		"psr-4": {
-			"Phi\\Routing\\": "source/class/Routing"
+			"Phi\\Routing\\": "source/class"
 		},
 		"files": [
 
