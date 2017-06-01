@@ -37,7 +37,7 @@ class Request implements \Phi\Routing\Interfaces\Request
             $this->isHTTP = $isHTTP;
         }
     }
-    
+
 
     public function getURI()
     {
