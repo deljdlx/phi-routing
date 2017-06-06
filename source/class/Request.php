@@ -44,6 +44,10 @@ class Request implements \Phi\Routing\Interfaces\Request
         return $this->URI;
     }
 
+    public function setURI($uri) {
+        $this->URI=$uri;
+    }
+
 
     public function isHTTP()
     {

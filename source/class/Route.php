@@ -24,11 +24,29 @@ class Route implements \Phi\Routing\Interfaces\Route
         $this->addHeaders($headers);
     }
 
-    public function build(/*$parameters*/)
+    public function setBuilder($builder) {
+        $this->builder=$builder;
+        return $this;
+    }
+
+    public function build($parameters)
     {
-        $parameters = func_get_args();
+        //$parameters = func_get_args();
+
+        print_r($parameters);
+
         if (is_callable($this->builder)) {
             return call_user_func_array($this->builder, $parameters);
+        }
+        elseif(is_string($this->builder)) {
+
+            $url=preg_replace_callback('`\{(.*?)\}`', function($match) use ($parameters) {
+
+                $value=$parameters[$match[1]];
+                return $value;
+            }, $this->builder);
+
+            echo $url;
         }
     }
 

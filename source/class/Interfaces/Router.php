@@ -8,7 +8,4 @@ interface Router
 {
 
 
-
-	public function get($route, $callback);
-
 }

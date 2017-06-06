@@ -35,11 +35,9 @@ class Router implements \Phi\Routing\Interfaces\Router
     }
 
 
-    public function get($validator, $callback, $name = null, $headers = array())
+    public function get($name, $validator, $callback, $headers = array())
     {
-        if ($name === null) {
-            $name = $validator;
-        }
+
 
         return $this->addRoute(
             new Route('get', $validator, $callback, $headers),
@@ -60,7 +58,7 @@ class Router implements \Phi\Routing\Interfaces\Router
         return new Request();
     }
 
-    public function run(\Phi\Interfaces\Request $request = null)
+    public function route(Request $request = null)
     {
 
         if ($request == null) {
@@ -98,6 +96,11 @@ class Router implements \Phi\Routing\Interfaces\Router
             $header->send();
         }
         return $this;
+    }
+
+    public function build($routeName, $parameters) {
+        $route=$this->getRouteByName($routeName);
+        return $route->build($parameters);
     }
 }
 
