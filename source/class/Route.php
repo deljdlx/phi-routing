@@ -13,41 +13,60 @@ class Route implements \Phi\Routing\Interfaces\Route
     protected $verbs = array();
     protected $parameters = array();
     protected $headers = array();
-    protected $builder = null;
+    protected $builders = array();
+    protected $name = '';
 
 
-    public function __construct($verbs, $validator, $callback, $headers = array())
+    public function __construct($name, $verbs, $validator, $callback, $headers = array())
     {
         $this->validator = $validator;
         $this->callback = $callback;
         $this->verbs = array($verbs);
+        $this->name = $name;
         $this->addHeaders($headers);
     }
 
-    public function setBuilder($builder) {
-        $this->builder=$builder;
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    public function setBuilder($builder, $name = null)
+    {
+
+        if ($name === null) {
+            $name = 0;
+        }
+        $this->builders[$name] = $builder;
         return $this;
     }
 
-    public function build($parameters)
+    public function build($parameters, $builderName = null)
     {
-        //$parameters = func_get_args();
 
-        print_r($parameters);
-
-        if (is_callable($this->builder)) {
-            return call_user_func_array($this->builder, $parameters);
+        if ($builderName === null) {
+            $builderName = 0;
         }
-        elseif(is_string($this->builder)) {
 
-            $url=preg_replace_callback('`\{(.*?)\}`', function($match) use ($parameters) {
+        if (isset($this->builders[$builderName])) {
+            $builder = $this->builders[$builderName];
 
-                $value=$parameters[$match[1]];
-                return $value;
-            }, $this->builder);
+            if (is_callable($builder)) {
+                return call_user_func_array($builder, $parameters);
+            } elseif (is_string($builder)) {
 
-            echo $url;
+                $url = preg_replace_callback('`\{(.*?)\}`', function ($match) use ($parameters) {
+                    $value = $parameters[$match[1]];
+                    return $value;
+                }, $builder);
+
+                return $url;
+            } elseif (is_string($this->validator)) {
+                return $this->validator;
+            }
         }
+
+        throw new \RuntimeException('No URL builder with name "' . $builderName . '" for route "' . $this->getName() . '" and no valid pattern for URL building');
     }
 
     public function addHeaders($headers)

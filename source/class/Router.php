@@ -40,7 +40,7 @@ class Router implements \Phi\Routing\Interfaces\Router
 
 
         return $this->addRoute(
-            new Route('get', $validator, $callback, $headers),
+            new Route($name, 'get', $validator, $callback, $headers),
             $name
         );
     }
