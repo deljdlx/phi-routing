@@ -13,6 +13,10 @@ class Route implements \Phi\Routing\Interfaces\Route
     protected $callback;
     protected $verbs = array();
     protected $parameters = array();
+
+    /**
+     * @var Header[]
+     */
     protected $headers = array();
     protected $builders = array();
     protected $name = '';
@@ -29,11 +33,20 @@ class Route implements \Phi\Routing\Interfaces\Route
         $this->addHeaders($headers);
     }
 
+    /**
+     * @return string
+     */
     public function getName()
     {
         return $this->name;
     }
 
+
+    /**
+     * @param $builder
+     * @param null $name
+     * @return $this
+     */
     public function setBuilder($builder, $name = null)
     {
 
@@ -72,11 +85,6 @@ class Route implements \Phi\Routing\Interfaces\Route
         throw new \RuntimeException('No URL builder with name "' . $builderName . '" for route "' . $this->getName() . '" and no valid pattern for URL building');
     }
 
-    public function addHeaders($headers)
-    {
-        $this->headers = array_merge($this->headers, $headers);
-        return $this;
-    }
 
     /**
      * @param $name
@@ -90,6 +98,10 @@ class Route implements \Phi\Routing\Interfaces\Route
     }
 
 
+    /**
+     * @param Request $request
+     * @return bool
+     */
     public function validate(Request $request)
     {
         $callString = $request->getURI();
@@ -163,15 +175,27 @@ class Route implements \Phi\Routing\Interfaces\Route
         );
     }
 
+    /**
+     * @return array
+     */
     public function getParameters()
     {
         return $this->parameters;
     }
 
-    public function getMatches() {
+
+    /**
+     * @return array
+     */
+    public function getMatches()
+    {
         return $this->matches;
     }
 
+
+    /**
+     * @return Header[]
+     */
     public function getHeaders()
     {
         return $this->headers;

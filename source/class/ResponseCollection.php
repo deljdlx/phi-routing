@@ -13,18 +13,30 @@ class ResponseCollection
     protected $responses;
 
 
+    /**
+     * @param Response $response
+     * @return $this
+     */
     public function addResponse(Response $response)
     {
         $this->responses[] = $response;
         return $this;
     }
 
+    /**
+     * @return Response[]
+     */
     public function getResponses()
     {
         return $this->responses;
     }
 
-    public function send()
+
+    /**
+     * @param bool $flush
+     * @return $this
+     */
+    public function send($flush=true)
     {
         $buffer = '';
 
@@ -45,8 +57,11 @@ class ResponseCollection
             $header->send();
         }
 
-        echo $buffer;
+        if($flush) {
+            echo $buffer;
+        }
 
+        return $this;
 
     }
 
