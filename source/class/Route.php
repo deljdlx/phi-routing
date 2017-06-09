@@ -12,7 +12,7 @@ class Route implements \Phi\Routing\Interfaces\Route
     protected $validator;
     protected $callback;
     protected $verbs = array();
-    protected $parameters = array();
+    protected $parameters = null;
 
     /**
      * @var Header[]
@@ -23,14 +23,15 @@ class Route implements \Phi\Routing\Interfaces\Route
 
     protected $matches = array();
 
+    protected $parametersExtractor = null;
 
-    public function __construct($name, $verbs, $validator, $callback, $headers = array())
+
+    public function __construct($name, $verbs, $validator, $callback)
     {
         $this->validator = $validator;
         $this->callback = $callback;
         $this->verbs = array($verbs);
         $this->name = $name;
-        $this->addHeaders($headers);
     }
 
     /**
@@ -108,15 +109,8 @@ class Route implements \Phi\Routing\Interfaces\Route
         if (is_string($this->validator)) {
             $matches = array();
             if (preg_match_all($this->validator, $callString, $matches)) {
-
                 $this->matches = $matches;
-
-                if (!empty($matches)) {
-                    array_shift($matches);
-                    foreach ($matches as $key => $match) {
-                        $this->parameters[$key] = $match[0];
-                    }
-                }
+                $this->parameters = $this->extractParameters($request);
                 return true;
             }
         } else if (is_closure($this->validator)) {
@@ -127,6 +121,7 @@ class Route implements \Phi\Routing\Interfaces\Route
                 $parameters
             );
             if ($validate) {
+                $this->parameters = $this->extractParameters($request);
                 return true;
             } else {
                 return false;
@@ -135,27 +130,64 @@ class Route implements \Phi\Routing\Interfaces\Route
         return false;
     }
 
-    public function getBindedParametersWithMethod($userParameters, $controllerName, $method)
+    public function extractParameters($request)
     {
-        $reflector = new \ReflectionMethod($controllerName, $method);
-        $parameters = $reflector->getParameters();
-        $callParameters = array();
-        foreach ($parameters as $parameter) {
-            if (isset($userParameters[$parameter->name])) {
-                $callParameters[] = $userParameters[$parameter->name];
-            } else if ($parameter->isOptional()) {
-                $callParameters[] = $parameter->getDefaultValue();
+
+        if ($this->parametersExtractor) {
+            return call_user_func_array(
+                $this->parametersExtractor,
+                array($request)
+            );
+        }
+
+
+        $reflector = new \ReflectionFunction($this->callback);
+        $callbackParameters = $reflector->getParameters();
+
+        $getParameters = array();
+        if (is_array($this->matches) && array_key_exists(1, $this->matches)) {
+            $getParameters = $this->matches[1];
+        }
+
+
+        $extractedParameters = array();
+        foreach ($getParameters as $key => $value) {
+            if (is_array($value) && array_key_exists(0, $value)) {
+                $extractedParameters[$key] = $value[0];
             } else {
-                throw new Exception('Method ' . $controllerName . '::' . $method . ' missing parameter ' . $parameter->name);
+                $extractedParameters[$key] = $value;
             }
         }
-        return $callParameters;
+
+        $realParameters = array();
+        foreach ($callbackParameters as $index => $parameter) {
+            if (array_key_exists($parameter->getName(), $extractedParameters)) {
+                $realParameters[$parameter->getName()] = $extractedParameters[$parameter->getName()];
+            } elseif (array_key_exists($index, $extractedParameters)) {
+                $realParameters[$parameter->getName()] = $extractedParameters[$index];
+            } elseif ($parameter->isOptional()) {
+                $realParameters[$parameter->getName()] = $parameter->getDefaultValue();
+            } else {
+                $realParameters[$parameter->getName()] = null;
+            }
+        }
+        return $realParameters;
     }
+
+    public function setParameterExtractor($callable)
+    {
+        $this->parametersExtractor = $callable;
+        return $this;
+    }
+
 
     public function execute()
     {
+
         $reflector = new \ReflectionFunction($this->callback);
         $parameters = $reflector->getParameters();
+
+
         $callParameters = array();
         foreach ($parameters as $index => $parameter) {
             if (isset($this->parameters[$parameter->name])) {
@@ -180,6 +212,9 @@ class Route implements \Phi\Routing\Interfaces\Route
      */
     public function getParameters()
     {
+        if ($this->parameters === null) {
+            $this->parameters = $this->extractParameters();
+        }
         return $this->parameters;
     }
 
