@@ -3,6 +3,7 @@
 namespace Phi\Routing;
 
 use Phi\HTTP\Header;
+use Phi\Routing\Interfaces\Request as IRequest;
 
 
 /**
@@ -55,10 +56,15 @@ class Router implements \Phi\Routing\Interfaces\Router
 
     protected function getDefaultRequest()
     {
-        return new Request();
+        return new HTTPRequest();
     }
 
-    public function route(Request $request = null)
+
+    /**
+     * @param IRequest|null $request
+     * @return ResponseCollection
+     */
+    public function route(IRequest $request = null)
     {
 
         if ($request == null) {
@@ -66,27 +72,41 @@ class Router implements \Phi\Routing\Interfaces\Router
         }
 
 
-        ob_start();
+        $responseCollection = new ResponseCollection();
+
         foreach ($this->routes as $route) {
             /**
              * @var \Phi\Route $route
              */
 
             if ($route->validate($request)) {
-                if ($route->execute()) {
-                    $headers = $route->getHeaders();
-                    foreach ($headers as $name => $value) {
-                        $this->headers[$name] = new Header($name, $value);
-                    }
+
+                $response = new Response();
+                $response
+                    ->setRequest($request)
+                    ->setRoute($route);
+
+                $responseCollection->addResponse($response);
+
+                ob_start();
+                $returnValue = $route->execute();
+                $buffer = ob_get_clean();
+                $response->setContent($buffer);
+
+                if ($returnValue) {
                     break;
                 }
             }
         }
-        $buffer = ob_get_clean();
+
+        return $responseCollection;
+
+        /*
         if ($request->isHTTP()) {
             $this->sendHeaders();
         }
         echo $buffer;
+        */
     }
 
 
@@ -98,8 +118,9 @@ class Router implements \Phi\Routing\Interfaces\Router
         return $this;
     }
 
-    public function build($routeName, $parameters) {
-        $route=$this->getRouteByName($routeName);
+    public function build($routeName, $parameters)
+    {
+        $route = $this->getRouteByName($routeName);
         return $route->build($parameters);
     }
 }

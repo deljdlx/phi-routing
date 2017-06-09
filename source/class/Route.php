@@ -2,6 +2,7 @@
 namespace Phi\Routing;
 
 
+use Phi\HTTP\Header;
 use Phi\Routing\Interfaces\Request;
 
 class Route implements \Phi\Routing\Interfaces\Route
@@ -15,6 +16,8 @@ class Route implements \Phi\Routing\Interfaces\Route
     protected $headers = array();
     protected $builders = array();
     protected $name = '';
+
+    protected $matches = array();
 
 
     public function __construct($name, $verbs, $validator, $callback, $headers = array())
@@ -72,7 +75,20 @@ class Route implements \Phi\Routing\Interfaces\Route
     public function addHeaders($headers)
     {
         $this->headers = array_merge($this->headers, $headers);
+        return $this;
     }
+
+    /**
+     * @param $name
+     * @param $value
+     * @return $this
+     */
+    public function addHeader($name, $value)
+    {
+        $this->headers[] = new Header($name, $value);
+        return $this;
+    }
+
 
     public function validate(Request $request)
     {
@@ -80,6 +96,9 @@ class Route implements \Phi\Routing\Interfaces\Route
         if (is_string($this->validator)) {
             $matches = array();
             if (preg_match_all($this->validator, $callString, $matches)) {
+
+                $this->matches = $matches;
+
                 if (!empty($matches)) {
                     array_shift($matches);
                     foreach ($matches as $key => $match) {
@@ -134,7 +153,7 @@ class Route implements \Phi\Routing\Interfaces\Route
             } else if ($parameter->isOptional()) {
                 $callParameters[] = $parameter->getDefaultValue();
             } else {
-                throw new Exception('Route callback missing parameter : ' . $parameter->name);
+                throw new \Exception('Route callback missing parameter : ' . $parameter->name);
             }
         }
         $callback = $this->callback->bindTo($this, $this);
@@ -147,6 +166,10 @@ class Route implements \Phi\Routing\Interfaces\Route
     public function getParameters()
     {
         return $this->parameters;
+    }
+
+    public function getMatches() {
+        return $this->matches;
     }
 
     public function getHeaders()

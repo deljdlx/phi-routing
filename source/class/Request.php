@@ -1,8 +1,10 @@
 <?php
 namespace Phi\Routing;
 
+use Phi\Routing\Interfaces\Request as IRequest;
 
-class Request implements \Phi\Routing\Interfaces\Request
+
+class Request
 {
 
 
@@ -11,8 +13,9 @@ class Request implements \Phi\Routing\Interfaces\Request
     protected $isHTTP;
     protected $uri = null;
 
-
     protected $protocol;
+
+    protected $implementation;
 
 
     public static function getInstance()
@@ -30,8 +33,7 @@ class Request implements \Phi\Routing\Interfaces\Request
 
         if ($isHTTP === null) {
             if ($this->isHTTP()) {
-                $this->URI = $_SERVER['REQUEST_URI'];
-                $this->protocol = $_SERVER['SERVER_PROTOCOL'];
+                $this->implementation = new \Phi\HTTP\Request();
             }
         } else {
             $this->isHTTP = $isHTTP;
@@ -39,13 +41,21 @@ class Request implements \Phi\Routing\Interfaces\Request
     }
 
 
-    public function getURI()
+    public function setImplementation(IRequest $implementation)
     {
-        return $this->URI;
+        $this->implementation = $implementation;
+        return $this;
     }
 
-    public function setURI($uri) {
-        $this->URI=$uri;
+    public function getURI()
+    {
+        return $this->implementation->getURI();
+    }
+
+
+    public function getRequest()
+    {
+        return $this->implementation;
     }
 
 
