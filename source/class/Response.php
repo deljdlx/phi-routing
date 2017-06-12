@@ -60,7 +60,7 @@ class Response
     /**
      * @return Request
      */
-    public function getReques()
+    public function getRequest()
     {
         return $this->request;
     }

@@ -7,6 +7,7 @@ use Phi\Routing\Interfaces\Request as IRequest;
 class Request
 {
 
+    const SAPI_CLI='cli';
 
     protected static $mainInstance = null;
 
@@ -64,7 +65,7 @@ class Request
 
 
         if ($this->isHTTP === null) {
-            if (php_sapi_name() == "cli") {
+            if (php_sapi_name() == static::SAPI_CLI) {
                 $this->isHTTP = false;
             } else {
                 $this->isHTTP = true;
