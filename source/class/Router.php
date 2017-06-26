@@ -2,6 +2,7 @@
 
 namespace Phi\Routing;
 
+use Phi\Event\Traits\Listenable;
 use Phi\HTTP\Header;
 use Phi\Routing\Interfaces\Request as IRequest;
 
@@ -13,6 +14,9 @@ use Phi\Routing\Interfaces\Request as IRequest;
  */
 class Router implements \Phi\Routing\Interfaces\Router
 {
+    use Listenable;
+
+    const EVENT_DEFAULT_REQUEST='EVENT_DEFAULT_REQUEST';
 
 
     protected $routes = array();
@@ -69,6 +73,12 @@ class Router implements \Phi\Routing\Interfaces\Router
 
         if ($request == null) {
             $request = $this->getDefaultRequest();
+            $this->fireEvent(
+                static::EVENT_DEFAULT_REQUEST,
+                array(
+                    'request'=>$request
+                )
+            );
         }
 
 

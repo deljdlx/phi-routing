@@ -48,7 +48,7 @@ class ResponseCollection
         foreach ($this->responses as $response) {
             $buffer .= $response->getContent();
 
-            if ($response->getReques()->isHTTP()) {
+            if ($response->getRequest()->isHTTP()) {
                 $headers = array_merge($headers, $response->getHTTPResponse()->getHeaders());
             }
         }
