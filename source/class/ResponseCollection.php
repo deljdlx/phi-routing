@@ -32,13 +32,21 @@ class ResponseCollection
     }
 
 
-    /**
-     * @param bool $flush
-     * @return $this
-     */
-    public function send($flush=true)
+    public function __toString()
     {
         $buffer = '';
+        foreach ($this->responses as $response) {
+            $buffer .= $response->getContent();
+        }
+        return $buffer;
+    }
+
+
+    /**
+     * @return Header[]
+     */
+    public function getHeaders()
+    {
 
         /**
          * @var Header[] $headers
@@ -46,23 +54,29 @@ class ResponseCollection
         $headers = array();
 
         foreach ($this->responses as $response) {
-            $buffer .= $response->getContent();
 
             if ($response->getRequest()->isHTTP()) {
                 $headers = array_merge($headers, $response->getHTTPResponse()->getHeaders());
             }
         }
+        return $headers;
+    }
+
+
+    /**
+     * @return $this
+     */
+    public function send()
+    {
+        $buffer = $this->__toString();
+        $headers = $this->getHeaders();
 
         foreach ($headers as $header) {
             $header->send();
         }
 
-        if($flush) {
-            echo $buffer;
-        }
-
+        echo $buffer;
         return $this;
-
     }
 
 

@@ -58,7 +58,7 @@ class Route implements \Phi\Routing\Interfaces\Route
         return $this;
     }
 
-    public function build($parameters, $builderName = null)
+    public function getURL($parameters, $builderName = null)
     {
 
         if ($builderName === null) {
