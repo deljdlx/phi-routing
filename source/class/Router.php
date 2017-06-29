@@ -3,7 +3,6 @@
 namespace Phi\Routing;
 
 use Phi\Event\Traits\Listenable;
-use Phi\HTTP\Header;
 use Phi\Routing\Interfaces\Request as IRequest;
 use Phi\Event\Interfaces\Listenable as IListenable;
 use Phi\Routing\Interfaces\Router as IRouter;
