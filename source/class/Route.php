@@ -117,6 +117,7 @@ class Route implements \Phi\Routing\Interfaces\Route
             if (preg_match_all($this->validator, $callString, $matches)) {
                 $this->matches = $matches;
                 $this->parameters = $this->extractParameters($request);
+                $this->fireEvent(new Match($this));
                 return true;
             }
         }
