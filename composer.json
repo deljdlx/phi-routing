@@ -4,7 +4,8 @@
 
 	"repositories": [
 		{"type": "vcs", "url": "https://github.com/ElBiniou/phi-http"},
-		{"type": "vcs", "url": "https://github.com/ElBiniou/phi-trait"}
+		{"type": "vcs", "url": "https://github.com/ElBiniou/phi-trait"},
+		{"type": "vcs", "url": "https://github.com/ElBiniou/phi-event"}
 	],
 	"require":
 	{

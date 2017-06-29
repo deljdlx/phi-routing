@@ -5,45 +5,62 @@ namespace Phi\Routing;
 use Phi\Event\Traits\Listenable;
 use Phi\HTTP\Header;
 use Phi\Routing\Interfaces\Request as IRequest;
-
+use Phi\Event\Interfaces\Listenable as IListenable;
+use Phi\Routing\Interfaces\Router as IRouter;
 
 /**
  * Class Router
  * @package Phi
  * @param
  */
-class Router implements \Phi\Routing\Interfaces\Router
+class Router implements IRouter, IListenable
 {
     use Listenable;
 
-    const EVENT_DEFAULT_REQUEST='EVENT_DEFAULT_REQUEST';
+    const EVENT_DEFAULT_REQUEST = 'EVENT_DEFAULT_REQUEST';
 
 
     protected $routes = array();
     protected $headers = array();
 
 
+    /**
+     * @param Route $route
+     * @param $name
+     * @return $this
+     */
     public function addRoute(Route $route, $name)
     {
+        $route->addParentListenable($this);
         $this->routes[$name] = $route;
-        return $route;
+        return $this;
     }
 
 
+    /**
+     * @param $name
+     * @return Route
+     */
     public function getRouteByName($name)
     {
         if (isset($this->routes[$name])) {
             return $this->routes[$name];
-        } else {
+        }
+        else {
             throw new Exception('Route with name "' . $name . '" does not exist');
         }
     }
 
 
+    /**
+     * @param $name
+     * @param $validator
+     * @param $callback
+     * @param array $headers
+     * @return Router
+     */
     public function get($name, $validator, $callback, $headers = array())
     {
-
-
         return $this->addRoute(
             new Route($name, 'get', $validator, $callback, $headers),
             $name
@@ -76,7 +93,7 @@ class Router implements \Phi\Routing\Interfaces\Router
             $this->fireEvent(
                 static::EVENT_DEFAULT_REQUEST,
                 array(
-                    'request'=>$request
+                    'request' => $request
                 )
             );
         }
@@ -110,16 +127,12 @@ class Router implements \Phi\Routing\Interfaces\Router
         }
 
         return $responseCollection;
-
-        /*
-        if ($request->isHTTP()) {
-            $this->sendHeaders();
-        }
-        echo $buffer;
-        */
     }
 
 
+    /**
+     * @return $this
+     */
     public function sendHeaders()
     {
         foreach ($this->headers as $header) {
@@ -128,6 +141,11 @@ class Router implements \Phi\Routing\Interfaces\Router
         return $this;
     }
 
+    /**
+     * @param $routeName
+     * @param $parameters
+     * @return string
+     */
     public function build($routeName, $parameters)
     {
         $route = $this->getRouteByName($routeName);

@@ -1,13 +1,17 @@
 <?php
+
 namespace Phi\Routing;
 
 
+use Phi\Event\Traits\Listenable;
 use Phi\HTTP\Header;
+use Phi\Routing\Event\Match;
 use Phi\Routing\Interfaces\Request;
 
 class Route implements \Phi\Routing\Interfaces\Route
 {
 
+    use Listenable;
 
     protected $validator;
     protected $callback;
@@ -70,7 +74,8 @@ class Route implements \Phi\Routing\Interfaces\Route
 
             if (is_callable($builder)) {
                 return call_user_func_array($builder, $parameters);
-            } elseif (is_string($builder)) {
+            }
+            elseif (is_string($builder)) {
 
                 $url = preg_replace_callback('`\{(.*?)\}`', function ($match) use ($parameters) {
                     $value = $parameters[$match[1]];
@@ -78,7 +83,8 @@ class Route implements \Phi\Routing\Interfaces\Route
                 }, $builder);
 
                 return $url;
-            } elseif (is_string($this->validator)) {
+            }
+            elseif (is_string($this->validator)) {
                 return $this->validator;
             }
         }
@@ -113,7 +119,8 @@ class Route implements \Phi\Routing\Interfaces\Route
                 $this->parameters = $this->extractParameters($request);
                 return true;
             }
-        } else if (is_closure($this->validator)) {
+        }
+        else if (is_closure($this->validator)) {
             $parameters = array();
             $closure = $this->validator->bindTo($this, $this);
             $validate = call_user_func_array(
@@ -122,8 +129,10 @@ class Route implements \Phi\Routing\Interfaces\Route
             );
             if ($validate) {
                 $this->parameters = $this->extractParameters($request);
+                $this->fireEvent(new Match($this));
                 return true;
-            } else {
+            }
+            else {
                 return false;
             }
         }
@@ -154,7 +163,8 @@ class Route implements \Phi\Routing\Interfaces\Route
         foreach ($getParameters as $key => $value) {
             if (is_array($value) && array_key_exists(0, $value)) {
                 $extractedParameters[$key] = $value[0];
-            } else {
+            }
+            else {
                 $extractedParameters[$key] = $value;
             }
         }
@@ -163,11 +173,14 @@ class Route implements \Phi\Routing\Interfaces\Route
         foreach ($callbackParameters as $index => $parameter) {
             if (array_key_exists($parameter->getName(), $extractedParameters)) {
                 $realParameters[$parameter->getName()] = $extractedParameters[$parameter->getName()];
-            } elseif (array_key_exists($index, $extractedParameters)) {
+            }
+            elseif (array_key_exists($index, $extractedParameters)) {
                 $realParameters[$parameter->getName()] = $extractedParameters[$index];
-            } elseif ($parameter->isOptional()) {
+            }
+            elseif ($parameter->isOptional()) {
                 $realParameters[$parameter->getName()] = $parameter->getDefaultValue();
-            } else {
+            }
+            else {
                 $realParameters[$parameter->getName()] = null;
             }
         }
@@ -192,11 +205,14 @@ class Route implements \Phi\Routing\Interfaces\Route
         foreach ($parameters as $index => $parameter) {
             if (isset($this->parameters[$parameter->name])) {
                 $callParameters[] = $this->parameters[$parameter->name];
-            } else if (isset($this->parameters[$index])) {
+            }
+            else if (isset($this->parameters[$index])) {
                 $callParameters[] = $this->parameters[$index];
-            } else if ($parameter->isOptional()) {
+            }
+            else if ($parameter->isOptional()) {
                 $callParameters[] = $parameter->getDefaultValue();
-            } else {
+            }
+            else {
                 throw new \Exception('Route callback missing parameter : ' . $parameter->name);
             }
         }
