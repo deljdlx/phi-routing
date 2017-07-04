@@ -4,7 +4,7 @@ namespace Phi\Routing;
 use Phi\Routing\Interfaces\Request as IRequest;
 
 
-class Request
+class Request implements  IRequest
 {
 
     const SAPI_CLI = 'cli';
