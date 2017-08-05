@@ -2,7 +2,7 @@
 namespace Phi\Routing;
 
 
-use Phi\Routing\Interfaces\Request;
+use Phi\Routing\Interfaces\Request as PhiRequest;
 use \Phi\HTTP\Response as PhiResponse;
 
 class Response
@@ -69,7 +69,7 @@ class Response
      * @param Request $request
      * @return $this
      */
-    public function setRequest(Request $request)
+    public function setRequest(PhiRequest $request)
     {
         $this->request = $request;
         return $this;
