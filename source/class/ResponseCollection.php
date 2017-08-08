@@ -1,4 +1,5 @@
 <?php
+
 namespace Phi\Routing;
 
 
@@ -10,7 +11,7 @@ class ResponseCollection
     /**
      * @var Response[]
      */
-    protected $responses;
+    protected $responses = array();
 
 
     /**
