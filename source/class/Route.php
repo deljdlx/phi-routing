@@ -121,7 +121,7 @@ class Route implements \Phi\Routing\Interfaces\Route
                 return true;
             }
         }
-        else if (is_closure($this->validator)) {
+        else if (isClosure($this->validator)) {
             $parameters = array();
             $closure = $this->validator->bindTo($this, $this);
             $validate = call_user_func_array(
@@ -136,6 +136,9 @@ class Route implements \Phi\Routing\Interfaces\Route
             else {
                 return false;
             }
+        }
+        else if(is_bool($this->validator)) {
+            return $this->validator;
         }
         return false;
     }
