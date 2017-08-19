@@ -82,9 +82,10 @@ class Router implements IRouter, IListenable
 
     /**
      * @param IRequest|null $request
+     * @param bool outputBuffering
      * @return ResponseCollection
      */
-    public function route(IRequest $request = null)
+    public function route(IRequest $request = null, $outputBuffering = false)
     {
 
         if ($request == null) {
@@ -102,7 +103,7 @@ class Router implements IRouter, IListenable
 
         foreach ($this->routes as $route) {
             /**
-             * @var \Phi\Route $route
+             * @var \Phi\Routing\Route $route
              */
 
             if ($route->validate($request)) {
@@ -118,6 +119,11 @@ class Router implements IRouter, IListenable
                 $returnValue = $route->execute();
                 $buffer = ob_get_clean();
                 $response->setContent($buffer);
+
+                if (!$outputBuffering) {
+                    echo $buffer;
+                }
+
 
                 if ($returnValue) {
                     break;
