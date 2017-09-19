@@ -1,10 +1,10 @@
 <?php
-namespace Phi\Routing;
+namespace Phi\Routing\Request;
 
 
 use Phi\HTTP\Request as PhiHTTPRequest;
 
-class HTTPRequest extends PhiHTTPRequest implements \Phi\Routing\Interfaces\Request
+class HTTP extends PhiHTTPRequest implements \Phi\Routing\Interfaces\Request
 {
 
     public function isHTTP() {

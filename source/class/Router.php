@@ -6,6 +6,7 @@ use Phi\Event\Traits\Listenable;
 use Phi\Routing\Interfaces\Request as IRequest;
 use Phi\Event\Interfaces\Listenable as IListenable;
 use Phi\Routing\Interfaces\Router as IRouter;
+use Phi\Routing\Request\HTTP;
 
 /**
  * Class Router
@@ -77,7 +78,7 @@ class Router implements IRouter, IListenable
 
     protected function getDefaultRequest()
     {
-        return new HTTPRequest();
+        return new HTTP();
     }
 
 

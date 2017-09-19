@@ -1,8 +1,8 @@
 <?php
-namespace Phi\Routing;
+namespace Phi\Routing\Request;
 
 
-class CliRequest implements \Phi\Routing\Interfaces\Request
+class Cli implements \Phi\Routing\Interfaces\Request
 {
 
     protected $parameters;
