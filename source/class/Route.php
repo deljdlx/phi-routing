@@ -18,9 +18,7 @@ class Route implements \Phi\Routing\Interfaces\Route
     protected $verbs = array();
     protected $parameters = null;
 
-    /**
-     * @var Header[]
-     */
+    /** @var Header[] */
     protected $headers = array();
     protected $builders = array();
     protected $name = '';
@@ -28,6 +26,9 @@ class Route implements \Phi\Routing\Interfaces\Route
     protected $matches = array();
 
     protected $parametersExtractor = null;
+
+    /** @var Request */
+    protected $request = null;
 
 
     public function __construct($name, $verbs, $validator, $callback)
@@ -37,6 +38,13 @@ class Route implements \Phi\Routing\Interfaces\Route
         $this->verbs = array($verbs);
         $this->name = $name;
     }
+
+    public function setRequest(Request $request)
+    {
+      $this->request = $request;
+      return $this;
+    }
+
 
     /**
      * @return string
@@ -62,7 +70,7 @@ class Route implements \Phi\Routing\Interfaces\Route
         return $this;
     }
 
-    public function getURL($parameters, $builderName = null)
+    public function buildURL($parameters, $builderName = null)
     {
 
         if ($builderName === null) {
@@ -109,14 +117,19 @@ class Route implements \Phi\Routing\Interfaces\Route
      * @param Request $request
      * @return bool
      */
-    public function validate(Request $request)
+    public function validate(Request $request = null)
     {
-        $callString = $request->getURI();
+
+        if($request) {
+            $this->setRequest($request);
+        }
+
+        $callString = $this->request->getURI();
         if (is_string($this->validator)) {
             $matches = array();
             if (preg_match_all($this->validator, $callString, $matches)) {
                 $this->matches = $matches;
-                $this->parameters = $this->extractParameters($request);
+                $this->parameters = $this->extractParameters($this->request);
                 $this->fireEvent(new Match($this));
                 return true;
             }
@@ -129,7 +142,7 @@ class Route implements \Phi\Routing\Interfaces\Route
                 $parameters
             );
             if ($validate) {
-                $this->parameters = $this->extractParameters($request);
+                $this->parameters = $this->extractParameters($this->request);
                 $this->fireEvent(new Match($this));
                 return true;
             }

@@ -18,8 +18,9 @@ class Router implements IRouter, IListenable
 
     const EVENT_DEFAULT_REQUEST = 'EVENT_DEFAULT_REQUEST';
 
-
+    /** @var Route[] */
     protected $routes = array();
+
     protected $headers = array();
 
 
@@ -102,10 +103,8 @@ class Router implements IRouter, IListenable
         $responseCollection = new ResponseCollection();
 
         foreach ($this->routes as $route) {
-            /**
-             * @var \Phi\Routing\Route $route
-             */
 
+            $route->setRequest($request);
             if ($route->validate($request)) {
 
                 $response = new Response();
