@@ -31,11 +31,12 @@ class Route implements \Phi\Routing\Interfaces\Route
     protected $request = null;
 
 
-    public function __construct($name, $verbs, $validator, $callback)
+    public function __construct($verbs, $validator, $callback, $headers = array(), $name = null)
     {
         $this->validator = $validator;
         $this->callback = $callback;
         $this->verbs = array($verbs);
+        $this->headers = $headers;
         $this->name = $name;
     }
 
@@ -127,6 +128,7 @@ class Route implements \Phi\Routing\Interfaces\Route
         $callString = $this->request->getURI();
         if (is_string($this->validator)) {
             $matches = array();
+
             if (preg_match_all($this->validator, $callString, $matches)) {
                 $this->matches = $matches;
                 $this->parameters = $this->extractParameters($this->request);

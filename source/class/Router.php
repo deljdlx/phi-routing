@@ -30,10 +30,18 @@ class Router implements IRouter, IListenable
      * @param $name
      * @return $this
      */
-    public function addRoute(Route $route, $name)
+    public function addRoute(Route $route, $name = null)
     {
+
         $route->addParentListenable($this);
-        $this->routes[$name] = $route;
+
+        if ($name === null) {
+            $this->routes[] = $route;
+        }
+        else {
+            $this->routes[$name] = $route;
+        }
+
         return $this;
     }
 
@@ -63,7 +71,7 @@ class Router implements IRouter, IListenable
     public function get($name, $validator, $callback, $headers = array())
     {
         return $this->addRoute(
-            new Route($name, 'get', $validator, $callback, $headers),
+            new Route('get', $validator, $callback, $headers, $name),
             $name
         );
     }
