@@ -35,7 +35,7 @@ class Route implements \Phi\Routing\Interfaces\Route
     {
         $this->validator = $validator;
         $this->callback = $callback;
-        $this->verbs = array($verbs);
+        $this->verbs = (array) $verbs;
         $this->headers = $headers;
         $this->name = $name;
     }
