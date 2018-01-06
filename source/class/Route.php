@@ -67,7 +67,14 @@ class Route implements \Phi\Routing\Interfaces\Route
         if ($name === null) {
             $name = 0;
         }
-        $this->builders[$name] = $builder;
+
+        if($name === null) {
+            $this->builders[] = $builder;
+        }
+        else {
+            $this->builders[$name] = $builder;
+        }
+
         return $this;
     }
 
