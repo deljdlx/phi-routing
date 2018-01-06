@@ -11,5 +11,4 @@ class HTTP extends PhiHTTPRequest implements \Phi\Routing\Interfaces\Request
         return true;
     }
 
-
 }

@@ -3,6 +3,7 @@
 namespace Phi\Routing;
 
 
+use Phi\Core\Exception;
 use Phi\Event\Traits\Listenable;
 use Phi\HTTP\Header;
 use Phi\Routing\Event\Match;
@@ -133,6 +134,19 @@ class Route implements \Phi\Routing\Interfaces\Route
         }
 
         $callString = $this->request->getURI();
+
+        echo '<pre id="' . __FILE__ . '-' . __LINE__ . '" style="border: solid 1px rgb(255,0,0); background-color:rgb(255,255,255)">';
+        echo '<div style="background-color:rgba(100,100,100,1); color: rgba(255,255,255,1)">' . __FILE__ . '@' . __LINE__ . '</div>';
+        print_r($request);
+        echo '</pre>';
+
+        if($this->request->isHTTP()) {
+            $requestVerb = $this->request->getVerb();
+            if(!in_array($requestVerb, $this->verbs) && $requestVerb !=='*') {
+                return false;
+            }
+        }
+
         if (is_string($this->validator)) {
             $matches = array();
 
@@ -169,10 +183,13 @@ class Route implements \Phi\Routing\Interfaces\Route
     {
 
         if ($this->parametersExtractor) {
-            return call_user_func_array(
-                $this->parametersExtractor,
-                array($request)
-            );
+            if(is_callable($this->parametersExtractor)) {
+                return call_user_func_array(
+                    $this->parametersExtractor,
+                    array($request)
+                );
+            }
+            throw new Exception('Route parameters extractor is set but is not a callable');
         }
 
 
@@ -215,6 +232,10 @@ class Route implements \Phi\Routing\Interfaces\Route
 
     public function setParameterExtractor($callable)
     {
+        if(!is_callable($callable)) {
+            throw new Exception('Parameters extrator must be a callable');
+        }
+
         $this->parametersExtractor = $callable;
         return $this;
     }
