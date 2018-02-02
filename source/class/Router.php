@@ -119,7 +119,7 @@ class Router implements IRouter, IListenable
                 $buffer = ob_get_clean();
                 $response->setContent($buffer);
 
-                if ($returnValue) {
+                if (!$returnValue) {
                     break;
                 }
             }
