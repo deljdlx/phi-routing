@@ -66,6 +66,16 @@ class Request implements  IRequest
         return $this->implementation;
     }
 
+    public function get($variableName = null)
+    {
+        return $this->implementation->get($variableName);
+    }
+
+    public function post($variableName = null)
+    {
+        return $this->implementation->post($variableName);
+    }
+
 
     public function isHTTP()
     {
