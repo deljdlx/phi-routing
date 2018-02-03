@@ -18,6 +18,8 @@ class Request implements  IRequest
 
     protected $implementation;
 
+    private $verb = 'get';
+
 
     public static function getInstance()
     {
@@ -42,6 +44,10 @@ class Request implements  IRequest
         else {
             $this->implementation = new CliRequest();
         }
+    }
+
+    public function getVerb() {
+        return $this->verb;
     }
 
 

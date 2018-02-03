@@ -3,6 +3,7 @@
 namespace Phi\Routing;
 
 
+use Phi\Core\Exception;
 use Phi\Event\Traits\Listenable;
 use Phi\HTTP\Header;
 use Phi\Routing\Event\Match;
@@ -18,9 +19,7 @@ class Route implements \Phi\Routing\Interfaces\Route
     protected $verbs = array();
     protected $parameters = null;
 
-    /**
-     * @var Header[]
-     */
+    /** @var Header[] */
     protected $headers = array();
     protected $builders = array();
     protected $name = '';
@@ -29,14 +28,25 @@ class Route implements \Phi\Routing\Interfaces\Route
 
     protected $parametersExtractor = null;
 
+    /** @var Request */
+    protected $request = null;
 
-    public function __construct($name, $verbs, $validator, $callback)
+
+    public function __construct($verbs, $validator, $callback, $headers = array(), $name = null)
     {
         $this->validator = $validator;
         $this->callback = $callback;
-        $this->verbs = array($verbs);
+        $this->verbs = (array) $verbs;
+        $this->headers = $headers;
         $this->name = $name;
     }
+
+    public function setRequest(Request $request)
+    {
+      $this->request = $request;
+      return $this;
+    }
+
 
     /**
      * @return string
@@ -58,11 +68,18 @@ class Route implements \Phi\Routing\Interfaces\Route
         if ($name === null) {
             $name = 0;
         }
-        $this->builders[$name] = $builder;
+
+        if($name === null) {
+            $this->builders[] = $builder;
+        }
+        else {
+            $this->builders[$name] = $builder;
+        }
+
         return $this;
     }
 
-    public function getURL($parameters, $builderName = null)
+    public function buildURL($parameters, $builderName = null)
     {
 
         if ($builderName === null) {
@@ -109,19 +126,35 @@ class Route implements \Phi\Routing\Interfaces\Route
      * @param Request $request
      * @return bool
      */
-    public function validate(Request $request)
+    public function validate(Request $request = null)
     {
-        $callString = $request->getURI();
+
+        if($request) {
+            $this->setRequest($request);
+        }
+
+        $callString = $this->request->getURI();
+
+
+        if($this->request->isHTTP()) {
+            $requestVerb = $this->request->getVerb();
+
+            if(!in_array($requestVerb, $this->verbs) && $requestVerb !=='*') {
+                return false;
+            }
+        }
+
         if (is_string($this->validator)) {
             $matches = array();
+
             if (preg_match_all($this->validator, $callString, $matches)) {
                 $this->matches = $matches;
-                $this->parameters = $this->extractParameters($request);
+                $this->parameters = $this->extractParameters($this->request);
                 $this->fireEvent(new Match($this));
                 return true;
             }
         }
-        else if (is_closure($this->validator)) {
+        else if (isClosure($this->validator)) {
             $parameters = array();
             $closure = $this->validator->bindTo($this, $this);
             $validate = call_user_func_array(
@@ -129,13 +162,16 @@ class Route implements \Phi\Routing\Interfaces\Route
                 $parameters
             );
             if ($validate) {
-                $this->parameters = $this->extractParameters($request);
+                $this->parameters = $this->extractParameters($this->request);
                 $this->fireEvent(new Match($this));
                 return true;
             }
             else {
                 return false;
             }
+        }
+        else if(is_bool($this->validator)) {
+            return $this->validator;
         }
         return false;
     }
@@ -144,10 +180,13 @@ class Route implements \Phi\Routing\Interfaces\Route
     {
 
         if ($this->parametersExtractor) {
-            return call_user_func_array(
-                $this->parametersExtractor,
-                array($request)
-            );
+            if(is_callable($this->parametersExtractor)) {
+                return call_user_func_array(
+                    $this->parametersExtractor,
+                    array($request)
+                );
+            }
+            throw new Exception('Route parameters extractor is set but is not a callable');
         }
 
 
@@ -190,6 +229,10 @@ class Route implements \Phi\Routing\Interfaces\Route
 
     public function setParameterExtractor($callable)
     {
+        if(!is_callable($callable)) {
+            throw new Exception('Parameters extrator must be a callable');
+        }
+
         $this->parametersExtractor = $callable;
         return $this;
     }

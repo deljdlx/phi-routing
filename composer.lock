@@ -4,27 +4,54 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "f304075bb0160c35fdcb52d9b50124f6",
-    "content-hash": "f216b1cb766294e7618af6609dc88541",
+    "content-hash": "dbedf76ba62c3bc136656599fb4872a8",
     "packages": [
+        {
+            "name": "phi-event",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ElBiniou/phi-event.git",
+                "reference": "2e44910b1bc33e757e6f6d635f94d647c9127f4d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ElBiniou/phi-event/zipball/2e44910b1bc33e757e6f6d635f94d647c9127f4d",
+                "reference": "2e44910b1bc33e757e6f6d635f94d647c9127f4d",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Phi\\Event\\": "source/class"
+                },
+                "files": []
+            },
+            "description": "Phi event",
+            "support": {
+                "source": "https://github.com/ElBiniou/phi-event/tree/master",
+                "issues": "https://github.com/ElBiniou/phi-event/issues"
+            },
+            "time": "2017-06-29T17:36:27+00:00"
+        },
         {
             "name": "phi-http",
             "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ElBiniou/phi-http.git",
-                "reference": "aca2988cc7a04e66bcd65527cdd4ebafec533969"
+                "reference": "68f90614b01fb78c7dddac0f25a6e8a067ef244f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ElBiniou/phi-http/zipball/aca2988cc7a04e66bcd65527cdd4ebafec533969",
-                "reference": "aca2988cc7a04e66bcd65527cdd4ebafec533969",
+                "url": "https://api.github.com/repos/ElBiniou/phi-http/zipball/68f90614b01fb78c7dddac0f25a6e8a067ef244f",
+                "reference": "68f90614b01fb78c7dddac0f25a6e8a067ef244f",
                 "shasum": ""
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Phi\\Routing\\": "source/class/HTTP"
+                    "Phi\\HTTP\\": "source/class"
                 },
                 "files": []
             },
@@ -33,14 +60,15 @@
                 "source": "https://github.com/ElBiniou/phi-http/tree/master",
                 "issues": "https://github.com/ElBiniou/phi-http/issues"
             },
-            "time": "2017-01-29 14:56:50"
+            "time": "2017-06-28T14:52:43+00:00"
         }
     ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "phi-http": 20
+        "phi-http": 20,
+        "phi-event": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

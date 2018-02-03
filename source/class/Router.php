@@ -6,6 +6,7 @@ use Phi\Event\Traits\Listenable;
 use Phi\Routing\Interfaces\Request as IRequest;
 use Phi\Event\Interfaces\Listenable as IListenable;
 use Phi\Routing\Interfaces\Router as IRouter;
+use Phi\Routing\Request\HTTP;
 
 /**
  * Class Router
@@ -18,8 +19,9 @@ class Router implements IRouter, IListenable
 
     const EVENT_DEFAULT_REQUEST = 'EVENT_DEFAULT_REQUEST';
 
-
+    /** @var Route[] */
     protected $routes = array();
+
     protected $headers = array();
 
 
@@ -28,10 +30,18 @@ class Router implements IRouter, IListenable
      * @param $name
      * @return $this
      */
-    public function addRoute(Route $route, $name)
+    public function addRoute(Route $route, $name = null)
     {
+
         $route->addParentListenable($this);
-        $this->routes[$name] = $route;
+
+        if ($name === null) {
+            $this->routes[] = $route;
+        }
+        else {
+            $this->routes[$name] = $route;
+        }
+
         return $this;
     }
 
@@ -61,10 +71,26 @@ class Router implements IRouter, IListenable
     public function get($name, $validator, $callback, $headers = array())
     {
         return $this->addRoute(
-            new Route($name, 'get', $validator, $callback, $headers),
+            new Route('get', $validator, $callback, $headers, $name),
             $name
         );
     }
+
+    /**
+     * @param $name
+     * @param $validator
+     * @param $callback
+     * @param array $headers
+     * @return Router
+     */
+    public function post($name, $validator, $callback, $headers = array())
+    {
+        return $this->addRoute(
+            new Route('post', $validator, $callback, $headers, $name),
+            $name
+        );
+    }
+
 
 
     //regexp permettant de valider la fin d'une url se termine sois par "/", "?....." ou fin d'url ($)
@@ -76,15 +102,16 @@ class Router implements IRouter, IListenable
 
     protected function getDefaultRequest()
     {
-        return new HTTPRequest();
+        return new HTTP();
     }
 
 
     /**
      * @param IRequest|null $request
+     * @param bool outputBuffering
      * @return ResponseCollection
      */
-    public function route(IRequest $request = null)
+    public function route(IRequest $request = null, $outputBuffering = false)
     {
 
         if ($request == null) {
@@ -101,10 +128,8 @@ class Router implements IRouter, IListenable
         $responseCollection = new ResponseCollection();
 
         foreach ($this->routes as $route) {
-            /**
-             * @var \Phi\Route $route
-             */
 
+            $route->setRequest($request);
             if ($route->validate($request)) {
 
                 $response = new Response();
@@ -119,9 +144,15 @@ class Router implements IRouter, IListenable
                 $buffer = ob_get_clean();
                 $response->setContent($buffer);
 
+
                 if (!$returnValue) {
                     break;
                 }
+
+                if (!$outputBuffering) {
+                    echo $buffer;
+                }
+
             }
         }
 
