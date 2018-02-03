@@ -34,6 +34,7 @@ class Route implements \Phi\Routing\Interfaces\Route
 
     public function __construct($verbs, $validator, $callback, $headers = array(), $name = null)
     {
+
         $this->validator = $validator;
         $this->callback = $callback;
         $this->verbs = (array) $verbs;
@@ -139,8 +140,17 @@ class Route implements \Phi\Routing\Interfaces\Route
         if($this->request->isHTTP()) {
             $requestVerb = $this->request->getVerb();
 
-            if(!in_array($requestVerb, $this->verbs) && $requestVerb !=='*') {
-                return false;
+            if($requestVerb !=='*') {
+                $verbValid = false;
+                foreach ($this->verbs as $verb) {
+                    if(strtoupper($verb) == strtoupper($requestVerb)) {
+                        $verbValid = true;
+                        break;
+                    }
+                }
+                if(!$verbValid) {
+                    return false;
+                }
             }
         }
 
