@@ -127,6 +127,7 @@ class Router implements IRouter, IListenable
 
         $responseCollection = new ResponseCollection();
 
+        $output = '';
         foreach ($this->routes as $route) {
 
             $route->setRequest($request);
@@ -144,16 +145,16 @@ class Router implements IRouter, IListenable
                 $buffer = ob_get_clean();
                 $response->setContent($buffer);
 
+                //$output .= $buffer;
 
                 if (!$returnValue) {
                     break;
                 }
-
-                if (!$outputBuffering) {
-                    echo $buffer;
-                }
-
             }
+        }
+
+        if(!$outputBuffering) {
+            $responseCollection->send();
         }
 
         return $responseCollection;
