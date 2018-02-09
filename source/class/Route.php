@@ -58,6 +58,23 @@ class Route implements \Phi\Routing\Interfaces\Route
     }
 
 
+
+    public function contentType($contentType)
+    {
+        $this->addHeader('Content-type', $contentType);
+        return $this;
+    }
+
+    public function json()
+    {
+        $this->contentType('application/json');
+        return $this;
+    }
+
+
+
+
+
     /**
      * @param $builder
      * @param null $name

@@ -42,7 +42,7 @@ class Router implements IRouter, IListenable
             $this->routes[$name] = $route;
         }
 
-        return $this;
+        return $route;
     }
 
 
