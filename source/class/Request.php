@@ -77,6 +77,13 @@ class Request implements  IRequest
     }
 
 
+    public function setURI($uri)
+    {
+        $this->implementation->setURI($uri);
+        return $this;
+    }
+
+
     public function isHTTP()
     {
 

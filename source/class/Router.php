@@ -19,10 +19,22 @@ class Router implements IRouter, IListenable
 
     const EVENT_DEFAULT_REQUEST = 'EVENT_DEFAULT_REQUEST';
 
+    const STATUS_SUCCESS  = 0;
+    const STATUS_FAIL  = 1;
+
+    const SUBROUTER_PATTERN_KEY = 'pattern';
+    const SUBROUTER_ROUTER_KEY = 'router';
+
+
+
     /** @var Route[] */
     protected $routes = array();
 
     protected $headers = array();
+
+    protected $subRouters = array();
+
+    protected $status = self::STATUS_FAIL;
 
 
     /**
@@ -44,6 +56,19 @@ class Router implements IRouter, IListenable
 
         return $route;
     }
+
+
+    public function addRouter(IRouter $router, $name, $pattern = null)
+    {
+        $this->subRouters[$name] = array(
+            self::SUBROUTER_PATTERN_KEY => $pattern,
+            self::SUBROUTER_ROUTER_KEY => $router
+        );
+        return $this;
+    }
+
+
+
 
 
     /**
@@ -127,37 +152,88 @@ class Router implements IRouter, IListenable
 
         $responseCollection = new ResponseCollection();
 
-        $output = '';
-        foreach ($this->routes as $route) {
+        $subRouterResponses = $this->routeSubRouter($request);
 
-            $route->setRequest($request);
-            if ($route->validate($request)) {
-
-                $response = new Response();
-                $response
-                    ->setRequest($request)
-                    ->setRoute($route);
-
+        if(!empty($subRouterResponses)) {
+            foreach ($subRouterResponses as $response) {
                 $responseCollection->addResponse($response);
+            }
+            $this->status = self::STATUS_SUCCESS;
+        }
 
-                ob_start();
-                $returnValue = $route->execute();
-                $buffer = ob_get_clean();
-                $response->setContent($buffer);
 
-                //$output .= $buffer;
+        if($this->status !== self::STATUS_SUCCESS) {
+            foreach ($this->routes as $route) {
 
-                if (!$returnValue) {
-                    break;
+                $route->setRequest($request);
+                if ($route->validate($request)) {
+
+                    $response = new Response();
+                    $response
+                        ->setRequest($request)
+                        ->setRoute($route);
+
+                    $responseCollection->addResponse($response);
+
+                    ob_start();
+                    $returnValue = $route->execute();
+                    $buffer = ob_get_clean();
+
+                    $response->setContent($buffer);
+
+                    $this->status = self::STATUS_SUCCESS;
+
+                    if (!$returnValue) {
+                        break;
+                    }
                 }
             }
         }
+
+
 
         if(!$outputBuffering) {
             $responseCollection->send();
         }
 
         return $responseCollection;
+    }
+
+
+    protected function routeSubRouter($request)
+    {
+
+        foreach ($this->subRouters as $name => $subRouterDescriptor) {
+
+            $pattern = $subRouterDescriptor[self::SUBROUTER_PATTERN_KEY];
+            $subRouter =  $subRouterDescriptor[self::SUBROUTER_ROUTER_KEY];
+
+
+            if(preg_match($pattern, $request->getURI())) {
+
+                $subRequest = clone $request;
+
+                $uri = $request->getURI();
+
+                $subURI = preg_replace($pattern, '', $uri);
+
+
+                $subRequest->setURI($subURI);
+
+                $responses = $subRouter->route($subRequest);
+
+                if($subRouter->getStatus() === self::STATUS_SUCCESS) {
+                    return $responses;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    public function getStatus()
+    {
+        return $this->status;
     }
 
 

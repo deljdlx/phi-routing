@@ -284,7 +284,7 @@ class Route implements \Phi\Routing\Interfaces\Route
                 $callParameters[] = $parameter->getDefaultValue();
             }
             else {
-                throw new \Exception('Route callback missing parameter : ' . $parameter->name);
+                throw new \Exception('Route callback missing parameter : [' . $parameter->name.'] for route ['.$this->name.']');
             }
         }
         $callback = $this->callback->bindTo($this, $this);
