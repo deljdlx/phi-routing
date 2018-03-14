@@ -9,7 +9,7 @@
 	],
 	"require":
 	{
-		"phi-http": "dev-core",
+		"phi-core": "dev-master",
 		"phi-http": "dev-master",
 		"phi-event": "dev-master"
 	},

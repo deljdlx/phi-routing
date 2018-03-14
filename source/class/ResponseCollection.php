@@ -4,14 +4,13 @@ namespace Phi\Routing;
 
 
 use Phi\HTTP\Header;
+use Phi\Traits\Collection;
 
 class ResponseCollection
 {
 
-    /**
-     * @var Response[]
-     */
-    protected $responses = array();
+    use Collection;
+
 
 
     /**
@@ -20,7 +19,7 @@ class ResponseCollection
      */
     public function addResponse(Response $response)
     {
-        $this->responses[] = $response;
+        $this->push($response);
         return $this;
     }
 
@@ -29,14 +28,17 @@ class ResponseCollection
      */
     public function getResponses()
     {
-        return $this->responses;
+        return $this->getAll();
     }
 
 
     public function __toString()
     {
         $buffer = '';
-        foreach ($this->responses as $response) {
+
+        $responses = $this->getAll();
+
+        foreach ($responses as $response) {
             $buffer .= $response->getContent();
         }
         return $buffer;
@@ -54,7 +56,9 @@ class ResponseCollection
          */
         $headers = array();
 
-        foreach ($this->responses as $response) {
+        $responses = $this->getAll();
+
+        foreach ($responses as $response) {
 
             if ($response->getRequest()->isHTTP()) {
                 $headers = array_merge($headers, $response->getHTTPResponse()->getHeaders());

@@ -287,6 +287,7 @@ class Route implements \Phi\Routing\Interfaces\Route
                 throw new \Exception('Route callback missing parameter : [' . $parameter->name.'] for route ['.$this->name.']');
             }
         }
+
         $callback = $this->callback->bindTo($this, $this);
         return call_user_func_array(
             array($callback, '__invoke'),
