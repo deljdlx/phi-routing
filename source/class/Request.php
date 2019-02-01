@@ -2,10 +2,14 @@
 namespace Phi\Routing;
 
 use Phi\Routing\Interfaces\Request as IRequest;
+use Phi\Traits\Collection;
 
 
 class Request implements  IRequest
 {
+
+
+    use Collection;
 
     const SAPI_CLI = 'cli';
 
@@ -16,6 +20,9 @@ class Request implements  IRequest
 
     protected $protocol;
 
+    /**
+     * @var IRequest
+     */
     protected $implementation;
 
 
@@ -42,6 +49,10 @@ class Request implements  IRequest
         else {
             $this->implementation = new CliRequest();
         }
+        if(!isset(static::$mainInstance)) {
+            static::$mainInstance = $this;
+        }
+
     }
 
     public function getVerb() {
@@ -54,6 +65,15 @@ class Request implements  IRequest
         $this->implementation = $implementation;
         return $this;
     }
+
+    /**
+     * @return CliRequest|IRequest
+     */
+    public function getImplementation()
+    {
+        return $this->implementation;
+    }
+
 
     public function getURI()
     {
@@ -76,6 +96,77 @@ class Request implements  IRequest
         return $this->implementation->post($variableName);
     }
 
+    public function files($variableName = null)
+    {
+        return $this->implementation->files($variableName);
+    }
+
+    public function getSession()
+    {
+        return $this->implementation->getSession();
+    }
+
+
+    public function data($name = null)
+    {
+
+        $data = array();
+
+        if(method_exists($this->implementation, 'get')) {
+            $data = array_merge(
+                $data,
+                $this->implementation->get()
+            );
+        }
+
+        if(method_exists($this->implementation, 'getBodyData')) {
+            $data = array_merge(
+                $data,
+                $this->implementation->getBodyData()
+            );
+        }
+
+
+        if(method_exists($this->implementation, 'post')) {
+            $data = array_merge(
+                $data,
+                $this->implementation->post()
+            );
+        }
+
+        if(method_exists($this->implementation, 'files')) {
+            $data = array_merge(
+                $data,
+                $this->implementation->files()
+            );
+        }
+
+
+        if(method_exists($this->implementation, 'cookies')) {
+            $data = array_merge(
+                $data,
+                $this->implementation->cookies()
+            );
+        }
+
+        if(method_exists($this->implementation, 'session')) {
+            $data = array_merge(
+                $data,
+                $this->implementation->session()
+            );
+        }
+
+        if($name !== null) {
+            if(array_key_exists($name, $data)) {
+                return $data[$name];
+            }
+        }
+
+        return $data;
+    }
+
+
+
 
     public function setURI($uri)
     {
@@ -87,6 +178,11 @@ class Request implements  IRequest
     public function isHTTP()
     {
 
+        if($this->implementation) {
+            return $this->implementation->isHTTP();
+        }
+
+
 
         if ($this->isHTTP === null) {
             if (php_sapi_name() == static::SAPI_CLI) {
@@ -97,8 +193,16 @@ class Request implements  IRequest
         }
 
         return $this->isHTTP;
+    }
 
+    public function getBody()
+    {
+        return $this->implementation->getBody();
+    }
 
+    public function getBodyData()
+    {
+        return $this->implementation->getBodyData();
     }
 
 

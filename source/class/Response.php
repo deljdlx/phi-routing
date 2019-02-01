@@ -22,10 +22,60 @@ class Response
      */
     protected $request;
 
+    /**
+     * @var array
+     */
+    protected $extraData = array();
+
+
+    //protected $
+
+
+
+    protected $executed = false;
+
     public function __construct($content = null)
     {
         $this->content = $content;
     }
+
+    public function execute()
+    {
+
+        $returnValue = $this->route->execute();
+        $buffer = $this->route->getOutput();
+        $this->setContent($buffer);
+
+
+        $this->executed = true;
+        return $returnValue;
+    }
+
+    public function isExecuted()
+    {
+        return $this->executed;
+    }
+
+
+    public function addExtraData($key, $value)
+    {
+        $this->extraData[$key] = $value;
+        return $this;
+    }
+
+    public function getExtraData($key = null) {
+        if($key === null) {
+            return $this->extraData;
+        }
+        else if(array_key_exists($key, $this->extraData)) {
+            return $this->extraData[$key];
+        }
+        else {
+            return null;
+        }
+    }
+
+
 
     /**
      * @param $content

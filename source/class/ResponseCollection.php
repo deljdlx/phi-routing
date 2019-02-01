@@ -12,6 +12,44 @@ class ResponseCollection
     use Collection;
 
 
+    protected $executedResponses = array();
+
+
+
+    public function execute()
+    {
+
+        foreach ($this->getResponses() as $response) {
+
+            $returnValue = $response->execute();
+
+            $this->executedResponses[] = $response;
+
+            if(!$returnValue) {
+                return false;
+            }
+        }
+
+        return true;
+
+    }
+
+
+    public function isEmpty()
+    {
+        if(!count($this->getResponses())) {
+            return true;
+        }
+        return false;
+    }
+
+
+    public function getExecutedResponses()
+    {
+        return $this->executedResponses;
+    }
+
+
 
     /**
      * @param Response $response
@@ -60,10 +98,13 @@ class ResponseCollection
 
         foreach ($responses as $response) {
 
-            if ($response->getRequest()->isHTTP()) {
-                $headers = array_merge($headers, $response->getHTTPResponse()->getHeaders());
+            if($response->isExecuted()) {
+                if ($response->getRequest()->isHTTP()) {
+                    $headers = array_merge($headers, $response->getHTTPResponse()->getHeaders());
+                }
             }
         }
+
         return $headers;
     }
 
@@ -71,7 +112,7 @@ class ResponseCollection
     /**
      * @return $this
      */
-    public function send()
+    public function send($flush = true)
     {
         $buffer = $this->__toString();
         $headers = $this->getHeaders();
@@ -80,8 +121,10 @@ class ResponseCollection
             $header->send();
         }
 
-        echo $buffer;
-        return $this;
+        if($flush) {
+            echo $buffer;
+        }
+        return $buffer;
     }
 
 

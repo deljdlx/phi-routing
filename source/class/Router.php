@@ -2,11 +2,15 @@
 
 namespace Phi\Routing;
 
+use Phi\Core\Exception;
 use Phi\Event\Traits\Listenable;
+use Phi\HTTP\Header;
 use Phi\Routing\Interfaces\Request as IRequest;
 use Phi\Event\Interfaces\Listenable as IListenable;
 use Phi\Routing\Interfaces\Router as IRouter;
 use Phi\Routing\Request\HTTP;
+use Phi\Traits\Collection;
+use Phi\Traits\HasDependency;
 
 /**
  * Class Router
@@ -16,8 +20,10 @@ use Phi\Routing\Request\HTTP;
 class Router implements IRouter, IListenable
 {
     use Listenable;
+    use Collection;
 
     const EVENT_DEFAULT_REQUEST = 'EVENT_DEFAULT_REQUEST';
+    const EVENT_ROUTING_START = 'EVENT_ROUTING_START';
 
     const STATUS_SUCCESS  = 0;
     const STATUS_FAIL  = 1;
@@ -30,11 +36,36 @@ class Router implements IRouter, IListenable
     /** @var Route[] */
     protected $routes = array();
 
+
+    /**
+     * @var Header[]
+     */
     protected $headers = array();
 
     protected $subRouters = array();
 
     protected $status = self::STATUS_FAIL;
+
+
+    protected $validators = array();
+
+
+
+    public function __construct()
+    {
+        $this->registerRoutes();
+    }
+
+    public function registerRoutes()
+    {
+        return $this;
+    }
+
+    public function addValidator($validator)
+    {
+        $this->validators[] = $validator;
+        return $this;
+    }
 
 
     /**
@@ -51,8 +82,13 @@ class Router implements IRouter, IListenable
             $this->routes[] = $route;
         }
         else {
+            if(array_key_exists($name, $this->routes)) {
+                throw new Exception('An route with name '.$name.' already exists');
+            }
             $this->routes[$name] = $route;
         }
+
+        $route->setRouter($this);
 
         return $route;
     }
@@ -70,7 +106,6 @@ class Router implements IRouter, IListenable
 
 
 
-
     /**
      * @param $name
      * @return Route
@@ -83,6 +118,33 @@ class Router implements IRouter, IListenable
         else {
             throw new Exception('Route with name "' . $name . '" does not exist');
         }
+    }
+
+    /**
+     * @return Route[]
+     */
+    public function getRoutes()
+    {
+        return $this->routes;
+    }
+
+
+
+
+
+    /**
+     * @param $name
+     * @param $validator
+     * @param $callback
+     * @param array $headers
+     * @return Router
+     */
+    public function all($name, $validator, $callback, $headers = array())
+    {
+        return $this->addRoute(
+            new Route('*', $validator, $callback, $headers, $name),
+            $name
+        );
     }
 
 
@@ -117,6 +179,22 @@ class Router implements IRouter, IListenable
     }
 
 
+    /**
+     * @param $name
+     * @param $validator
+     * @param $callback
+     * @param array $headers
+     * @return Router
+     */
+    public function delete($name, $validator, $callback, $headers = array())
+    {
+        return $this->addRoute(
+            new Route('delete', $validator, $callback, $headers, $name),
+            $name
+        );
+    }
+
+
 
     //regexp permettant de valider la fin d'une url se termine sois par "/", "?....." ou fin d'url ($)
     public function getEndRouteRegexp()
@@ -131,15 +209,34 @@ class Router implements IRouter, IListenable
     }
 
 
+    public function executeRoute($routeId)
+    {
+        foreach ($this->routes as $route) {
+
+            $route->setDependencies($this->getDependencies());
+
+            if ($route->getName() == $routeId) {
+
+                //ob_start();
+                $returnValue = $route->execute();
+                //$buffer = ob_get_clean();
+                $this->status = self::STATUS_SUCCESS;
+                return true;
+                //return $buffer;
+            }
+        }
+        return false;
+    }
+
     /**
      * @param IRequest|null $request
      * @param bool outputBuffering
      * @return ResponseCollection
      */
-    public function route(IRequest $request = null, $outputBuffering = false)
+    public function route(IRequest $request = null, array $variables = array(),  &$executedRoutes = null)
     {
 
-        if ($request == null) {
+        if ($request === null) {
             $request = $this->getDefaultRequest();
             $this->fireEvent(
                 static::EVENT_DEFAULT_REQUEST,
@@ -150,9 +247,40 @@ class Router implements IRouter, IListenable
         }
 
 
+        $variables = array_merge($this->getVariables(), $variables);
+
+
+        $this->fireEvent(
+            static::EVENT_ROUTING_START,
+            array(
+                'request' => $request
+            )
+        );
+
         $responseCollection = new ResponseCollection();
 
-        $subRouterResponses = $this->routeSubRouter($request);
+        foreach ($this->validators as $validator) {
+            if(is_string($validator)) {
+                if(!preg_match_all($validator, $request->getURI())) {
+                    return $responseCollection;
+                }
+            }
+            else if(is_callable($validator)) {
+                if(isClosure($validator)) {
+
+                    $validator = $validator->bindTo($this, $this);
+                }
+
+                if(!call_user_func_array($validator, array($request))) {
+                    return $responseCollection;
+                }
+            }
+        }
+
+
+
+
+        $subRouterResponses = $this->routeSubRouter($request, $variables);
 
         if(!empty($subRouterResponses)) {
             foreach ($subRouterResponses as $response) {
@@ -162,45 +290,44 @@ class Router implements IRouter, IListenable
         }
 
 
+
         if($this->status !== self::STATUS_SUCCESS) {
             foreach ($this->routes as $route) {
 
+
+                $route->setVariables(
+                    $variables
+                );
+
                 $route->setRequest($request);
+
                 if ($route->validate($request)) {
+
+                    $executedRoutes[] = $route;
 
                     $response = new Response();
                     $response
                         ->setRequest($request)
                         ->setRoute($route);
 
+                    $route->setResponse($response);
+
                     $responseCollection->addResponse($response);
 
-                    ob_start();
-                    $returnValue = $route->execute();
-                    $buffer = ob_get_clean();
-
-                    $response->setContent($buffer);
-
-                    $this->status = self::STATUS_SUCCESS;
-
-                    if (!$returnValue) {
+                    if($route->isFinal()) {
                         break;
                     }
+
                 }
             }
         }
 
 
-
-        if(!$outputBuffering) {
-            $responseCollection->send();
-        }
-
         return $responseCollection;
     }
 
 
-    protected function routeSubRouter($request)
+    protected function routeSubRouter($request, array $variables = array())
     {
 
         foreach ($this->subRouters as $name => $subRouterDescriptor) {
@@ -220,7 +347,7 @@ class Router implements IRouter, IListenable
 
                 $subRequest->setURI($subURI);
 
-                $responses = $subRouter->route($subRequest);
+                $responses = $subRouter->route($subRequest, $variables);
 
                 if($subRouter->getStatus() === self::STATUS_SUCCESS) {
                     return $responses;
@@ -231,10 +358,25 @@ class Router implements IRouter, IListenable
     }
 
 
+
     public function getStatus()
     {
         return $this->status;
     }
+
+
+
+    /**
+     * @param $name
+     * @param $value
+     * @return $this
+     */
+    public function addHeader($name, $value = null)
+    {
+        $this->headers[] = new Header($name, $value);
+        return $this;
+    }
+
 
 
     /**
@@ -245,8 +387,23 @@ class Router implements IRouter, IListenable
         foreach ($this->headers as $header) {
             $header->send();
         }
+
         return $this;
     }
+
+    public function error404()
+    {
+        $this->addHeader('HTTP/1.0 404 Not Found');
+        return $this;
+    }
+
+    public function redirect($url)
+    {
+        $this->addHeader('Location', $url);
+        return $this;
+    }
+
+
 
     /**
      * @param $routeName
@@ -256,7 +413,7 @@ class Router implements IRouter, IListenable
     public function build($routeName, $parameters)
     {
         $route = $this->getRouteByName($routeName);
-        return $route->build($parameters);
+        return $route->buildURL($parameters);
     }
 }
 

@@ -8,16 +8,31 @@ use Phi\Event\Traits\Listenable;
 use Phi\HTTP\Header;
 use Phi\Routing\Event\Match;
 use Phi\Routing\Interfaces\Request;
+use Phi\Traits\Collection;
+use Phi\Traits\HasDependency;
 
 class Route implements \Phi\Routing\Interfaces\Route
 {
 
     use Listenable;
+    use Collection;
 
     protected $validator;
+
+
+    protected $beforeHook;
+    protected $afterHook;
+
+
     protected $callback;
     protected $verbs = array();
     protected $parameters = null;
+
+    protected $isFinal = true;
+
+
+    protected $output;
+
 
     /** @var Header[] */
     protected $headers = array();
@@ -31,8 +46,18 @@ class Route implements \Phi\Routing\Interfaces\Route
     /** @var Request */
     protected $request = null;
 
+    /**
+     * @var Response
+     */
+    protected $response;
 
-    public function __construct($verbs, $validator, $callback, $headers = array(), $name = null)
+    /**
+     * @var Router
+     */
+    protected $router;
+
+
+    public function __construct($verbs = 'get', $validator = false, $callback = null, $headers = array(), $name = null)
     {
 
         $this->validator = $validator;
@@ -41,6 +66,91 @@ class Route implements \Phi\Routing\Interfaces\Route
         $this->headers = $headers;
         $this->name = $name;
     }
+
+
+    public function isFinal($value = null)
+    {
+        if($value == null) {
+            $this->isFinal = $value;
+            return $this;
+        }
+        else {
+            return $this->isFinal();
+        }
+    }
+
+    /**
+     * @param Response $response
+     * @return $this
+     */
+    public function setResponse(Response $response)
+    {
+        $this->response = $response;
+        return $this;
+    }
+
+
+    /**
+     * @param Router $router
+     * @return $this
+     */
+    public function setRouter(Router $router)
+    {
+        $this->router = $router;
+        return $this;
+    }
+
+    /**
+     * @return Router
+     */
+    public function getRouter()
+    {
+        return $this->router;
+    }
+
+
+    public function loadFromRoute(Route $route)
+    {
+        $this->validator = $route->validator;
+        $this->callback = $route->callback;
+        $this->verbs = $route->verbs;
+        $this->headers = $route->headers;
+        $this->name = $route->name;
+    }
+
+
+
+    public function doBefore($callable)
+    {
+        $this->beforeHook = $callable;
+        return $this;
+    }
+
+    public function doAfter($callable)
+    {
+        $this->afterHook = $callable;
+        return $this;
+    }
+
+
+
+    public function data($name = null)
+    {
+        return $this->request->data($name);
+    }
+
+    public function post($name = null)
+    {
+        return $this->request->post($name);
+    }
+
+    public function get($name = null)
+    {
+        return $this->request->get($name);
+    }
+
+
+
 
     public function setRequest(Request $request)
     {
@@ -65,9 +175,44 @@ class Route implements \Phi\Routing\Interfaces\Route
         return $this;
     }
 
+
     public function json()
     {
         $this->contentType('application/json');
+        return $this;
+    }
+
+    public function text()
+    {
+        $this->contentType('text/plain');
+        return $this;
+    }
+
+
+
+    public function html($charset = 'utf-8')
+    {
+        $this->contentType('text/html; charset="'.$charset.'"');
+        return $this;
+    }
+
+    public function javascript($charset = 'utf-8')
+    {
+        $this->contentType('application/javascript; charset="'.$charset.'"');
+        return $this;
+    }
+
+
+
+    public function redirect($url)
+    {
+        $this->addHeader('Location', $url);
+        return $this;
+    }
+
+    public function error404()
+    {
+        $this->addHeader('HTTP/1.0 404 Not Found');
         return $this;
     }
 
@@ -97,7 +242,7 @@ class Route implements \Phi\Routing\Interfaces\Route
         return $this;
     }
 
-    public function buildURL($parameters, $builderName = null)
+    public function buildURL($parameters = array(), $builderName = null)
     {
 
         if ($builderName === null) {
@@ -133,7 +278,7 @@ class Route implements \Phi\Routing\Interfaces\Route
      * @param $value
      * @return $this
      */
-    public function addHeader($name, $value)
+    public function addHeader($name, $value = null)
     {
         $this->headers[] = new Header($name, $value);
         return $this;
@@ -144,7 +289,7 @@ class Route implements \Phi\Routing\Interfaces\Route
      * @param Request $request
      * @return bool
      */
-    public function validate(Request $request = null)
+    public function validate(Request $request = null, array $variables = array())
     {
 
         if($request) {
@@ -157,9 +302,16 @@ class Route implements \Phi\Routing\Interfaces\Route
         if($this->request->isHTTP()) {
             $requestVerb = $this->request->getVerb();
 
-            if($requestVerb !=='*') {
+
+
+
                 $verbValid = false;
                 foreach ($this->verbs as $verb) {
+
+                    if($verb === '*') {
+                        $verbValid = true;
+                        break;
+                    }
                     if(strtoupper($verb) == strtoupper($requestVerb)) {
                         $verbValid = true;
                         break;
@@ -168,14 +320,21 @@ class Route implements \Phi\Routing\Interfaces\Route
                 if(!$verbValid) {
                     return false;
                 }
-            }
+
         }
+
+
 
         if (is_string($this->validator)) {
             $matches = array();
 
-            if (preg_match_all($this->validator, $callString, $matches)) {
-                $this->matches = $matches;
+            if (preg_match_all($this->validator, $callString, $matches, PREG_SET_ORDER)) {
+
+                array_shift($matches[0]);
+
+                $this->matches = $matches[0];
+
+
                 $this->parameters = $this->extractParameters($this->request);
                 $this->fireEvent(new Match($this));
                 return true;
@@ -220,20 +379,18 @@ class Route implements \Phi\Routing\Interfaces\Route
         $reflector = new \ReflectionFunction($this->callback);
         $callbackParameters = $reflector->getParameters();
 
+
         $getParameters = array();
-        if (is_array($this->matches) && array_key_exists(1, $this->matches)) {
-            $getParameters = $this->matches[1];
+
+
+        if (is_array($this->matches)) {
+            $getParameters = $this->matches;
         }
 
 
         $extractedParameters = array();
         foreach ($getParameters as $key => $value) {
-            if (is_array($value) && array_key_exists(0, $value)) {
-                $extractedParameters[$key] = $value[0];
-            }
-            else {
-                $extractedParameters[$key] = $value;
-            }
+            $extractedParameters[$key] = urldecode($value);
         }
 
         $realParameters = array();
@@ -251,6 +408,7 @@ class Route implements \Phi\Routing\Interfaces\Route
                 $realParameters[$parameter->getName()] = null;
             }
         }
+
         return $realParameters;
     }
 
@@ -261,6 +419,19 @@ class Route implements \Phi\Routing\Interfaces\Route
         }
 
         $this->parametersExtractor = $callable;
+        return $this;
+    }
+
+
+    public function setParameters(array $parameters)
+    {
+        $this->parameters = $parameters;
+        return $this;
+    }
+
+    public function setParameter($name, $value)
+    {
+        $this->parameters[$name] = $value;
         return $this;
     }
 
@@ -288,11 +459,41 @@ class Route implements \Phi\Routing\Interfaces\Route
             }
         }
 
+
         $callback = $this->callback->bindTo($this, $this);
-        return call_user_func_array(
-            array($callback, '__invoke'),
-            $callParameters
-        );
+
+        $preHookValue = true;
+        $returnValue = null;
+
+        ob_start();
+        if(is_callable($this->beforeHook)) {
+            $preHookValue = call_user_func_array($this->beforeHook, array(
+                $this
+            ));
+        }
+
+        if($preHookValue) {
+            $returnValue = call_user_func_array(
+                array($callback, '__invoke'),
+                $callParameters
+            );
+        }
+
+        if(is_callable($this->afterHook)) {
+            $closure = $this->afterHook->bindTo($this, $this);
+            call_user_func_array($closure, array(
+                $this
+            ));
+        }
+
+        $this->output = ob_get_clean();
+
+        return $returnValue;
+    }
+
+    public function getOutput()
+    {
+        return $this->output;
     }
 
     /**
