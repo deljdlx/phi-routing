@@ -266,7 +266,7 @@ class Router implements IRouter, IListenable
                 }
             }
             else if(is_callable($validator)) {
-                if(isClosure($validator)) {
+                if($this->isClosure($validator)) {
 
                     $validator = $validator->bindTo($this, $this);
                 }
@@ -415,6 +415,18 @@ class Router implements IRouter, IListenable
         $route = $this->getRouteByName($routeName);
         return $route->buildURL($parameters);
     }
+
+
+
+    protected function isClosure($variable)
+    {
+        return is_object($variable) && ($variable instanceof Closure);
+    }
+
+
+
+
+
 }
 
 
