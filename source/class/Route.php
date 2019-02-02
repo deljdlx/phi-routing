@@ -466,7 +466,12 @@ class Route implements \Phi\Routing\Interfaces\Route
         $returnValue = null;
 
         ob_start();
+
+
         if(is_callable($this->beforeHook)) {
+
+
+
             $preHookValue = call_user_func_array($this->beforeHook, array(
                 $this
             ));
