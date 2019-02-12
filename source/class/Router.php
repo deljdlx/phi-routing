@@ -196,11 +196,6 @@ class Router implements IRouter, IListenable
 
 
 
-    //regexp permettant de valider la fin d'une url se termine sois par "/", "?....." ou fin d'url ($)
-    public function getEndRouteRegexp()
-    {
-        return '(:?/|\?|$)';
-    }
 
 
     protected function getDefaultRequest()

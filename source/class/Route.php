@@ -79,6 +79,15 @@ class Route implements \Phi\Routing\Interfaces\Route
         }
     }
 
+
+
+    //regexp permettant de valider la fin d'une url se termine sois par "/", "?....." ou fin d'url ($)
+    public static function getEndRouteRegexp()
+    {
+        return '(:?/|\?|$|&)';
+    }
+
+
     /**
      * @param Response $response
      * @return $this
