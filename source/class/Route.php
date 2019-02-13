@@ -68,6 +68,12 @@ class Route implements \Phi\Routing\Interfaces\Route
     }
 
 
+    public function getBuilders()
+    {
+        return $this->builders;
+    }
+
+
     public function isFinal($value = null)
     {
         if($value == null) {
@@ -234,18 +240,25 @@ class Route implements \Phi\Routing\Interfaces\Route
      * @param null $name
      * @return $this
      */
-    public function setBuilder($builder, $name = null)
+    public function setBuilder($builder, $name = null, array $parametersDesriptors = null)
     {
 
         if ($name === null) {
             $name = 0;
         }
 
+        $builderInstance = new RouteBuildder($this, $builder, $name);
+
+        if(!empty($parametersDesriptors)) {
+            $builderInstance->setParametersByDescriptor($parametersDesriptors);
+        }
+
+
         if($name === null) {
-            $this->builders[] = $builder;
+            $this->builders[] = $builderInstance;
         }
         else {
-            $this->builders[$name] = $builder;
+            $this->builders[$name] = $builderInstance;
         }
 
         return $this;
@@ -258,24 +271,9 @@ class Route implements \Phi\Routing\Interfaces\Route
             $builderName = 0;
         }
 
-        if (isset($this->builders[$builderName])) {
+        if (array_key_exists($builderName, $this->builders)) {
             $builder = $this->builders[$builderName];
-
-            if (is_callable($builder)) {
-                return call_user_func_array($builder, $parameters);
-            }
-            elseif (is_string($builder)) {
-
-                $url = preg_replace_callback('`\{(.*?)\}`', function ($match) use ($parameters) {
-                    $value = $parameters[$match[1]];
-                    return $value;
-                }, $builder);
-
-                return $url;
-            }
-            elseif (is_string($this->validator)) {
-                return $this->validator;
-            }
+            return $builder->getURL($parameters);
         }
 
         throw new \RuntimeException('No URL builder with name "' . $builderName . '" for route "' . $this->getName() . '" and no valid pattern for URL building');
@@ -297,6 +295,11 @@ class Route implements \Phi\Routing\Interfaces\Route
             $this->headers[] = new Header($header, $value);
         }
         return $this;
+    }
+
+    public function getValidator()
+    {
+        return $this->validator;
     }
 
 
