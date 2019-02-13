@@ -287,9 +287,15 @@ class Route implements \Phi\Routing\Interfaces\Route
      * @param $value
      * @return $this
      */
-    public function addHeader($name, $value = null)
+    public function addHeader($header, $value = null)
     {
-        $this->headers[] = new Header($name, $value);
+
+        if($header instanceof Header) {
+            $this->headers[] = $header;
+        }
+        else {
+            $this->headers[] = new Header($header, $value);
+        }
         return $this;
     }
 
