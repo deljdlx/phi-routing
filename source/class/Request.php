@@ -160,6 +160,9 @@ class Request implements  IRequest
             if(array_key_exists($name, $data)) {
                 return $data[$name];
             }
+            else {
+                return null;
+            }
         }
 
         return $data;
