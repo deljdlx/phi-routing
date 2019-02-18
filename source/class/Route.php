@@ -32,6 +32,7 @@ class Route implements \Phi\Routing\Interfaces\Route
 
 
     protected $output;
+    protected $executionStatus = null;
 
 
     /** @var Header[] */
@@ -454,8 +455,14 @@ class Route implements \Phi\Routing\Interfaces\Route
     }
 
 
-    public function execute()
+    public function execute(array $parameters = null)
     {
+
+        if($parameters !== null) {
+            foreach ($parameters as $key => $value) {
+                $this->setParameter($key, $value);
+            }
+        }
 
         $reflector = new \ReflectionFunction($this->callback);
         $parameters = $reflector->getParameters();
@@ -511,8 +518,16 @@ class Route implements \Phi\Routing\Interfaces\Route
 
         $this->output = ob_get_clean();
 
+        $this->executionStatus = $returnValue;
+
         return $returnValue;
     }
+    public function getStatus()
+    {
+        return $this->executionStatus;
+    }
+
+
 
     public function getOutput()
     {

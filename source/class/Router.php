@@ -204,20 +204,18 @@ class Router implements IRouter, IListenable
     }
 
 
+    /**
+     * @param $routeId
+     * @return bool|Route
+     */
     public function executeRoute($routeId)
     {
         foreach ($this->routes as $route) {
 
-            $route->setDependencies($this->getDependencies());
-
             if ($route->getName() == $routeId) {
-
-                //ob_start();
-                $returnValue = $route->execute();
-                //$buffer = ob_get_clean();
+                $route->execute();
                 $this->status = self::STATUS_SUCCESS;
-                return true;
-                //return $buffer;
+                return $route;
             }
         }
         return false;
