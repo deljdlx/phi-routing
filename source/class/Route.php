@@ -7,7 +7,7 @@ use Phi\Core\Exception;
 use Phi\Event\Traits\Listenable;
 use Phi\HTTP\Header;
 use Phi\Routing\Event\Match;
-use Phi\Routing\Interfaces\Request;
+use Phi\Routing\Interfaces\Request as IRequest;
 use Phi\Traits\Collection;
 use Phi\Traits\HasDependency;
 
@@ -44,7 +44,7 @@ class Route implements \Phi\Routing\Interfaces\Route
 
     protected $parametersExtractor = null;
 
-    /** @var Request */
+    /** @var IRequest */
     protected $request = null;
 
     /**
@@ -168,7 +168,7 @@ class Route implements \Phi\Routing\Interfaces\Route
 
 
 
-    public function setRequest(Request $request)
+    public function setRequest(IRequest $request)
     {
       $this->request = $request;
       return $this;
@@ -308,7 +308,7 @@ class Route implements \Phi\Routing\Interfaces\Route
      * @param Request $request
      * @return bool
      */
-    public function validate(Request $request = null, array $variables = array())
+    public function validate(IRequest $request = null, array $variables = array())
     {
 
         if($request) {
