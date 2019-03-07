@@ -220,6 +220,8 @@ class Route implements \Phi\Routing\Interfaces\Route
 
 
 
+
+
     public function redirect($url)
     {
         $this->addHeader('Location', $url);
