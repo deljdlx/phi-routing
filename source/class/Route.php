@@ -307,6 +307,11 @@ class Route implements \Phi\Routing\Interfaces\Route
     }
 
 
+    public function getVerbs()
+    {
+        return $this->verbs;
+    }
+
     /**
      * @param Request $request
      * @return bool

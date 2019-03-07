@@ -91,8 +91,6 @@ class RouteBuildder implements \JsonSerializable
         else if($this->action instanceof \Closure) {
             $descriptor['type'] = 'closure';
 
-            //$reflector = new \ReflectionObject($this->action);
-            //$methodReflector = $reflector->getMethod('__invoke');
 
             $methodReflector = new \ReflectionFunction($this->action);
 
