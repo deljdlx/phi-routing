@@ -5,6 +5,9 @@ namespace Phi\Routing;
 
 
 
+function someFunction(int $param, $param2) {}
+
+
 class RouteBuildder implements \JsonSerializable
 {
 
@@ -87,7 +90,41 @@ class RouteBuildder implements \JsonSerializable
         }
         else if($this->action instanceof \Closure) {
             $descriptor['type'] = 'closure';
-            $descriptor['parameters'] = $this->getParameters();
+
+            //$reflector = new \ReflectionObject($this->action);
+            //$methodReflector = $reflector->getMethod('__invoke');
+
+            $methodReflector = new \ReflectionFunction($this->action);
+
+
+            $parameterDescriptors = [];
+
+            foreach ($methodReflector->getParameters() as $parameter) {
+
+                if($type = $parameter->getType()) {
+
+                    if($type instanceof \ReflectionNamedType) {
+                        $type = $type->getName();
+                    }
+                    else {
+                        $type = $type->__toString();
+                    }
+                }
+
+                $parameterDescriptors[$parameter->getName()] = array(
+                   'name' => $parameter->getName(),
+                    'class' => $parameter->getClass(),
+                    'isOptionnal' =>  $parameter->isOptional(),
+                    'type' => $type,
+                    'defaultValue' => null
+                );
+                if($parameter->isDefaultValueAvailable()) {
+                    $parameterDescriptors[$parameter->getName()]['defaultValue'] = $parameter->getDefaultValue();
+                }
+            }
+            $descriptor['parameters'] = $parameterDescriptors;
+
+            //$descriptor['parameters'] = $this->getParameters();
 
         }
 

@@ -246,9 +246,10 @@ class Route implements \Phi\Routing\Interfaces\Route
     public function setBuilder($builder, $name = null, array $parametersDesriptors = null)
     {
 
+        /*
         if ($name === null) {
-            $name = 0;
         }
+        */
 
         $builderInstance = new RouteBuildder($this, $builder, $name);
 
