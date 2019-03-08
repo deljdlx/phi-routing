@@ -106,6 +106,11 @@ class Request implements  IRequest
         return $this->implementation->getSession();
     }
 
+    public function getParts()
+    {
+        return $this->implementation->getParts();
+    }
+
 
     public function data($name = null)
     {
