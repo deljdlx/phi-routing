@@ -75,6 +75,9 @@ class Request implements  IRequest
     }
 
 
+    /**
+     * @return string
+     */
     public function getURI()
     {
         return $this->implementation->getURI();
