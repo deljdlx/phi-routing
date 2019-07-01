@@ -1,220 +1,56 @@
 <?php
+
 namespace Phi\Routing;
 
-use Phi\Routing\Interfaces\Request as IRequest;
-use Phi\Traits\Collection;
 
 
-class Request implements  IRequest
+class Request extends \Phi\HTTP\Request
 {
 
+    private $parameters = [];
 
-    use Collection;
-
-    const SAPI_CLI = 'cli';
-
-    protected static $mainInstance = null;
-
-    protected $isHTTP;
-    protected $uri = null;
-
-    protected $protocol;
-
-    /**
-     * @var IRequest
-     */
-    protected $implementation;
-
-
-    public static function getInstance()
+    public function __construct($autobuild = true)
     {
-
-        if (static::$mainInstance === null) {
-            static::$mainInstance = new static();
-        }
-        return static::$mainInstance;
+        parent::__construct($autobuild);
     }
 
 
-    public function __construct($isHTTP = null)
+
+
+    public function addParameter($parameterName, $value)
     {
-
-        if ($isHTTP === null) {
-            $this->isHTTP = $this->isHTTP();
-        }
-
-        if ($this->isHTTP()) {
-            $this->implementation = new \Phi\HTTP\Request();
-        }
-        else {
-            $this->implementation = new CliRequest();
-        }
-        if(!isset(static::$mainInstance)) {
-            static::$mainInstance = $this;
-        }
-
+        $this->parameters[$parameterName] = $value;
+        return $this;
     }
 
-    public function getVerb() {
-        return $this->implementation->getVerb();
-    }
-
-
-    public function setImplementation(IRequest $implementation)
+    public function addParameters(array $parameters)
     {
-        $this->implementation = $implementation;
+
+        foreach ($parameters as $name => $value) {
+            $this->parameters[$name] = $value;
+        }
         return $this;
     }
 
     /**
-     * @return CliRequest|IRequest
+     * @return array
      */
-    public function getImplementation()
+    public function getParameters()
     {
-        return $this->implementation;
+        return $this->parameters;
     }
 
-
-    /**
-     * @return string
-     */
-    public function getURI()
+    public function getParameter($name)
     {
-        return $this->implementation->getURI();
-    }
-
-
-    public function getRequest()
-    {
-        return $this->implementation;
-    }
-
-    public function get($variableName = null)
-    {
-        return $this->implementation->get($variableName);
-    }
-
-    public function post($variableName = null)
-    {
-        return $this->implementation->post($variableName);
-    }
-
-    public function files($variableName = null)
-    {
-        return $this->implementation->files($variableName);
-    }
-
-    public function getSession()
-    {
-        return $this->implementation->getSession();
-    }
-
-    public function getParts()
-    {
-        return $this->implementation->getParts();
-    }
-
-
-    public function data($name = null)
-    {
-
-        $data = array();
-
-        if(method_exists($this->implementation, 'get')) {
-            $data = array_merge(
-                $data,
-                $this->implementation->get()
-            );
+        if(!array_key_exists($name, $this->parameters)) {
+            throw new Exception('No parameter with name '.$name);
         }
 
-        if(method_exists($this->implementation, 'getBodyData')) {
-            $data = array_merge(
-                $data,
-                $this->implementation->getBodyData()
-            );
-        }
-
-
-        if(method_exists($this->implementation, 'post')) {
-            $data = array_merge(
-                $data,
-                $this->implementation->post()
-            );
-        }
-
-        if(method_exists($this->implementation, 'files')) {
-            $data = array_merge(
-                $data,
-                $this->implementation->files()
-            );
-        }
-
-
-        if(method_exists($this->implementation, 'cookies')) {
-            $data = array_merge(
-                $data,
-                $this->implementation->cookies()
-            );
-        }
-
-        if(method_exists($this->implementation, 'session')) {
-            $data = array_merge(
-                $data,
-                $this->implementation->session()
-            );
-        }
-
-        if($name !== null) {
-            if(array_key_exists($name, $data)) {
-                return $data[$name];
-            }
-            else {
-                return null;
-            }
-        }
-
-        return $data;
+        return $this->parameters[$name];
     }
 
 
-
-
-    public function setURI($uri)
-    {
-        $this->implementation->setURI($uri);
-        return $this;
-    }
-
-
-    public function isHTTP()
-    {
-
-        if($this->implementation) {
-            return $this->implementation->isHTTP();
-        }
-
-
-
-        if ($this->isHTTP === null) {
-            if (php_sapi_name() == static::SAPI_CLI) {
-                $this->isHTTP = false;
-            } else {
-                $this->isHTTP = true;
-            }
-        }
-
-        return $this->isHTTP;
-    }
-
-    public function getBody()
-    {
-        return $this->implementation->getBody();
-    }
-
-    public function getBodyData()
-    {
-        return $this->implementation->getBodyData();
-    }
 
 
 }
+

@@ -1,81 +1,37 @@
 <?php
+
 namespace Phi\Routing;
 
 
-use Phi\Routing\Interfaces\Request as PhiRequest;
-use \Phi\HTTP\Response as PhiResponse;
+
+use Phi\HTTP\Header;
 
 class Response
 {
 
-    /**
-     * @var string
-     */
-    protected $content;
-    /**
-     * @var Route
-     */
-    protected $route;
+    private $request;
+
+    private $content = null;
+
 
     /**
-     * @var Request
+     * @var Header[]
      */
-    protected $request;
+    private $headers = [];
 
-    /**
-     * @var array
-     */
-    protected $extraData = array();
-
-
-    //protected $
-
-
-
-    protected $executed = false;
-
-    public function __construct($content = null)
+    public function __construct(Request $request = null)
     {
-        $this->content = $content;
-    }
-
-    public function execute()
-    {
-
-        $returnValue = $this->route->execute();
-        $buffer = $this->route->getOutput();
-        $this->setContent($buffer);
-
-
-        $this->executed = true;
-        return $returnValue;
-    }
-
-    public function isExecuted()
-    {
-        return $this->executed;
+        if($request) {
+            $this->request = $request;
+        }
     }
 
 
-    public function addExtraData($key, $value)
+    public function setRequest(Request $request)
     {
-        $this->extraData[$key] = $value;
+        $this->request = $request;
         return $this;
     }
-
-    public function getExtraData($key = null) {
-        if($key === null) {
-            return $this->extraData;
-        }
-        else if(array_key_exists($key, $this->extraData)) {
-            return $this->extraData[$key];
-        }
-        else {
-            return null;
-        }
-    }
-
-
 
     /**
      * @param $content
@@ -88,59 +44,38 @@ class Response
     }
 
 
-    /**
-     * @param Route $route
-     * @return $this
-     */
-    public function setRoute(Route $route)
-    {
-        $this->route = $route;
-        return $this;
-    }
-
-
-    /**
-     * @return Route
-     */
-    public function getRoute()
-    {
-        return $this->route;
-    }
-
-    /**
-     * @return Request
-     */
-    public function getRequest()
-    {
-        return $this->request;
-    }
-
-    /**
-     * @param Request $request
-     * @return $this
-     */
-    public function setRequest(PhiRequest $request)
-    {
-        $this->request = $request;
-        return $this;
-    }
-
-    /**
-     * @return null|string
-     */
     public function getContent()
     {
         return $this->content;
     }
 
-    /**
-     * @return PhiResponse
-     */
-    public function getHTTPResponse()
+
+    public function addHeader($header, $headerValue = null)
     {
-        $response = new PhiResponse($this->content, $this->route->getHeaders());
-        return $response;
+        if($header instanceof Header) {
+            $this->headers[$header->getName()] = $header;
+        }
+        else if(is_string($header)){
+            $this->header[$header] = $headerValue;
+        }
+        else {
+            throw new Exception('Invalid header name');
+        }
+        return $this;
+    }
+
+
+    public function sendHeaders()
+    {
+
+        foreach ($this->headers as $header) {
+
+            header($header->getName().': '.$header->getValue());
+        }
+        return $this;
+
     }
 
 
 }
+
