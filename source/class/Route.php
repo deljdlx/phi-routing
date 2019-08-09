@@ -40,7 +40,12 @@ class Route
     private $headers = [];
 
 
-
+    /**
+     * Route constructor.
+     * @param $verbs
+     * @param $validator
+     * @param $callback
+     */
     public function __construct($verbs, $validator, $callback)
     {
         $this->response = new Response();
@@ -54,7 +59,12 @@ class Route
     }
 
 
-    public function setVerbs($verbs)
+    /**
+     * @param $verbs
+     * @return $this
+     * @throws Exception
+     */
+    public function setVerbs($verbs): Route
     {
 
 
@@ -72,7 +82,11 @@ class Route
     }
 
 
-    public function setValidator($validator)
+    /**
+     * @param $validator
+     * @return $this
+     */
+    public function setValidator($validator): Route
     {
         if($validator instanceof Validator) {
             $validatorInstance = $validator;
@@ -92,7 +106,7 @@ class Route
      * @return Response
      * @throws Exception
      */
-    public function execute(Request $request)
+    public function execute(Request $request): Response
     {
 
         if($this->validate($request)) {
@@ -117,14 +131,20 @@ class Route
     }
 
 
-    public function setResponseContent($callback)
+    /**
+     * @param $callback
+     * @return $this
+     */
+    public function setResponseContent($callback): Route
     {
         if(is_string($callback))
         {
             $this->response->setContent($callback);
         }
         else if(is_callable($callback)) {
-            $content = call_user_func_array($callback, array($this->response));
+            ob_start();
+            call_user_func_array($callback, array($this->response));
+            $content = ob_get_clean();
             if(is_string($content)) {
                 $this->response->setContent($content);
             }
@@ -137,7 +157,7 @@ class Route
     /**
      * @return Response
      */
-    public function getResponse()
+    public function getResponse(): Response
     {
         return $this->response;
     }
@@ -146,7 +166,7 @@ class Route
      * @param $verb
      * @return bool
      */
-    public function validateVerb($verb)
+    public function validateVerb($verb): bool
     {
 
         foreach ($this->verbs as $validVerb) {
@@ -161,7 +181,7 @@ class Route
      * @param Request $request
      * @return bool
      */
-    public function validate(Request $request)
+    public function validate(Request $request): bool
     {
         if(!$this->validateVerb($request->getVerb())) {
             return false;
@@ -170,7 +190,13 @@ class Route
     }
 
 
-    public function addHeader($header, $headerValue = null)
+    /**
+     * @param $header
+     * @param null $headerValue
+     * @return $this
+     * @throws Exception
+     */
+    public function addHeader($header, $headerValue = null): Route
     {
         if($header instanceof Header) {
             $this->headers[$header->getName()] = $header;
@@ -188,22 +214,44 @@ class Route
 
     //=======================================================
 
-    public function json($charset = 'utf-8')
+    /**
+     * @param string $charset
+     * @return $this
+     */
+    public function json($charset = 'utf-8'): Route
     {
         $this->addHeader('Content-type', 'application/json; charset='.$charset);
 
         return $this;
     }
 
-    public function html($charset = 'utf-8')
+    /**
+     * @param string $charset
+     * @return $this
+     */
+    public function html($charset = 'utf-8'): Route
     {
         $this->addHeader('Content-type', 'text/html; charset='.$charset);
         return $this;
     }
 
-    public function plainText($charset = 'utf-8')
+    /**
+     * @param string $charset
+     * @return $this
+     */
+    public function plainText($charset = 'utf-8'): Route
     {
         $this->addHeader('Content-type', 'text/plain; charset='.$charset);
+        return $this;
+    }
+
+    /**
+     * @param string $charset
+     * @return $this
+     */
+    public function javascript($charset = 'utf-8'): Route
+    {
+        $this->addHeader('Content-type', 'text/javascript; charset='.$charset);
         return $this;
     }
 

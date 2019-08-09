@@ -34,6 +34,14 @@ class Response
     }
 
     /**
+     * @return Request
+     */
+    public function getRequest()
+    {
+        return $this->request;
+    }
+
+    /**
      * @param $content
      * @return $this
      */
@@ -56,7 +64,7 @@ class Response
             $this->headers[$header->getName()] = $header;
         }
         else if(is_string($header)){
-            $this->header[$header] = $headerValue;
+            $this->headers[$header] = new Header($header, $headerValue);
         }
         else {
             throw new Exception('Invalid header name');
@@ -67,14 +75,60 @@ class Response
 
     public function sendHeaders()
     {
-
         foreach ($this->headers as $header) {
-
             header($header->getName().': '.$header->getValue());
         }
         return $this;
-
     }
+
+
+    /**
+     * @param string $charset
+     * @return $this
+     */
+    public function json($charset = 'utf-8')
+    {
+        $this->addHeader('Content-type', 'application/json; charset='.$charset);
+
+        return $this;
+    }
+
+    /**
+     * @param string $charset
+     * @return $this
+     */
+    public function html($charset = 'utf-8')
+    {
+        $this->addHeader('Content-type', 'text/html; charset='.$charset);
+        return $this;
+    }
+
+    /**
+     * @param string $charset
+     * @return $this
+     */
+    public function plainText($charset = 'utf-8')
+    {
+        $this->addHeader('Content-type', 'text/plain; charset='.$charset);
+        return $this;
+    }
+
+    /**
+     * @param string $charset
+     * @return $this
+     */
+    public function javascript($charset = 'utf-8')
+    {
+        $this->addHeader('Content-type', 'application/javascript; charset='.$charset);
+        return $this;
+    }
+
+    public function stylesheet($charset = 'utf-8')
+    {
+        $this->addHeader('Content-type', 'text/css; charset='.$charset);
+        return $this;
+    }
+
 
 
 }
