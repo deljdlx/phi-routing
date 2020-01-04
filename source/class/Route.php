@@ -143,7 +143,19 @@ class Route
         }
         else if(is_callable($callback)) {
             ob_start();
-            call_user_func_array($callback, array($this->response));
+
+
+            if(is_object($callback)) {
+                if($callback instanceof \Closure) {
+                    call_user_func_array($callback->bindTo($this, $this), array($this->response));
+                }
+            }
+
+            else {
+                call_user_func_array($callback, array($this->response));
+            }
+
+
             $content = ob_get_clean();
             if(is_string($content)) {
                 $this->response->setContent($content);

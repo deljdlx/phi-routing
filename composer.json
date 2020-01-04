@@ -1,5 +1,5 @@
 {
-	"name": "phi-routing",
+	"name": "elbiniou/phi-routing",
 	"description": "Phi routing",
 
 	"repositories": [
@@ -9,9 +9,9 @@
 	],
 	"require":
 	{
-		"phi-core": "dev-master",
-		"phi-http": "dev-master",
-		"phi-event": "dev-master"
+		"elbiniou/phi-core": "0.1.0",
+		"elbiniou/phi-http": "0.1.0",
+		"elbiniou/phi-event": "0.1.0"
 	},
 
 	"autoload": {
